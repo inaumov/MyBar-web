@@ -3,12 +3,14 @@ package mybar.web.rest.rates.history;
 import mybar.domain.History;
 import mybar.service.rates.history.HistoryService;
 import mybar.web.rest.ARestControllerTest;
+import mybar.web.rest.rates.exception.RatesRestExceptionProcessor;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
@@ -22,6 +24,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(HistoryController.class)
+@ContextConfiguration(
+        classes = {
+                HistoryController.class,
+                RatesRestExceptionProcessor.class
+        }
+)
 public class HistoryControllerTest extends ARestControllerTest {
 
     public static final String USERNAME = "bill";
@@ -52,10 +60,9 @@ public class HistoryControllerTest extends ARestControllerTest {
 
         when(historyServiceMock.getHistoryForPeriod(any(LocalDate.class), any(LocalDate.class))).thenReturn(Collections.singletonList(history));
 
-        this.mockMvc.perform(makePreAuthorizedRequest(ADMIN, ADMIN,
-                get("/v1/rates/history")
+        this.mockMvc.perform(asAdmin(get("/v1/rates/history"))
                         .param("startDate", "2020-12-31")
-                        .param("endDate", "2021-02-13")))
+                        .param("endDate", "2021-02-13"))
 
                 .andDo(print())
                 .andExpect(status()

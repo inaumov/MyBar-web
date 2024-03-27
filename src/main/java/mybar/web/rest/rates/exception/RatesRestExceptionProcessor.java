@@ -6,10 +6,11 @@ import mybar.app.bean.ErrorInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -17,7 +18,8 @@ import java.text.MessageFormat;
 import java.util.Locale;
 
 @Slf4j
-@ControllerAdvice(basePackages = "mybar.web.rest.rates")
+@RestControllerAdvice(basePackages = "mybar.web.rest.rates")
+@Order(Ordered.HIGHEST_PRECEDENCE)
 public class RatesRestExceptionProcessor {
 
     private final MessageSource messageSource;
@@ -29,7 +31,6 @@ public class RatesRestExceptionProcessor {
 
     @ExceptionHandler(CocktailNotFoundException.class)
     @ResponseStatus(value = HttpStatus.FORBIDDEN)
-    @ResponseBody
     public ErrorInfo cocktailNotFound(HttpServletRequest req, CocktailNotFoundException ex) {
         log.warn("Cocktail not found thrown:", ex);
 
@@ -39,16 +40,6 @@ public class RatesRestExceptionProcessor {
         String errorURL = req.getRequestURL().toString();
 
         return new ErrorInfo(errorURL, errorMessage);
-    }
-
-    @ExceptionHandler(IllegalArgumentException.class)
-    @ResponseStatus(value = HttpStatus.BAD_REQUEST)
-    @ResponseBody
-    public ErrorInfo requiredFields(HttpServletRequest req, IllegalArgumentException ex) {
-        log.warn("Invalid property value:", ex);
-
-        String errorURL = req.getRequestURL().toString();
-        return new ErrorInfo(errorURL, ex.getMessage());
     }
 
 }

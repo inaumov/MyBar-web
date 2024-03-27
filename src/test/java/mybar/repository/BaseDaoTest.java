@@ -9,7 +9,6 @@ import org.dbunit.database.DefaultMetadataHandler;
 import org.dbunit.dataset.Column;
 import org.dbunit.dataset.filter.IColumnFilter;
 import org.dbunit.ext.postgresql.PostgresqlDataTypeFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.context.TestConfiguration;
@@ -48,14 +47,8 @@ public abstract class BaseDaoTest extends DbTestContext {
     @TestConfiguration
     static class DbUnitConfig {
 
-        private final DataSource dataSource;
-
-        public DbUnitConfig(@Autowired DataSource dataSource) {
-            this.dataSource = dataSource;
-        }
-
         @Bean
-        public DatabaseDataSourceConnectionFactoryBean dbUnitDatabaseConnection(Environment environment) {
+        public DatabaseDataSourceConnectionFactoryBean dbUnitDatabaseConnection(Environment environment, DataSource dataSource) {
             var databaseDataSourceConnectionFactoryBean = new DatabaseDataSourceConnectionFactoryBean();
             databaseDataSourceConnectionFactoryBean.setDatabaseConfig(dbUnitDatabaseConfig());
             databaseDataSourceConnectionFactoryBean.setUsername(environment.getProperty("tc.postgres.username"));

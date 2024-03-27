@@ -6,6 +6,7 @@ import mybar.dto.bar.ingredient.BeverageDto;
 import mybar.dto.bar.ingredient.DrinkDto;
 import mybar.service.bar.IngredientService;
 import mybar.web.rest.ARestControllerTest;
+import mybar.web.rest.bar.exception.BarRestExceptionProcessor;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Arrays;
@@ -30,6 +32,12 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(IngredientsController.class)
+@ContextConfiguration(
+        classes = {
+                IngredientsController.class,
+                BarRestExceptionProcessor.class
+        }
+)
 public class IngredientsRestControllerTest extends ARestControllerTest {
     public static final String basePath = "/v1/ingredients";
 
@@ -49,21 +57,15 @@ public class IngredientsRestControllerTest extends ARestControllerTest {
     }
 
     @AfterEach
-    public void tearDown() throws Exception {
+    public void tearDown() {
         Mockito.reset(ingredientServiceMock);
     }
 
     @Test
     public void test_findAll_notAuthorized() throws Exception {
-        String accessToken = "not_a_real_token";
-
         when(ingredientServiceMock.findAll()).thenReturn(Collections.emptyList());
 
-        mockMvc.perform(get(basePath)
-                .header("Authorization", "Bearer " + accessToken)
-                .accept(MediaType.APPLICATION_JSON))
-
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        mockMvc.perform(get(basePath))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -72,9 +74,7 @@ public class IngredientsRestControllerTest extends ARestControllerTest {
 
         when(ingredientServiceMock.findAll()).thenReturn(Collections.emptyList());
 
-        mockMvc.perform(makePreAuthorizedRequest(ADMIN, ADMIN, get(basePath)))
-
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        mockMvc.perform(asAdmin(get(basePath)))
                 .andExpect(status().isForbidden());
     }
 
@@ -95,9 +95,9 @@ public class IngredientsRestControllerTest extends ARestControllerTest {
         beverage.setKind("Whiskey");
         beverage.setBeverageType(BeverageType.DISTILLED);
 
-        when(ingredientServiceMock.findAll()).thenReturn(Arrays.<IIngredient>asList(additive, drink, beverage));
+        when(ingredientServiceMock.findAll()).thenReturn(Arrays.asList(additive, drink, beverage));
 
-        mockMvc.perform(makePreAuthorizedRequest(USER, USER, get(basePath)))
+        mockMvc.perform(asUser(get(basePath)))
 
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -127,9 +127,8 @@ public class IngredientsRestControllerTest extends ARestControllerTest {
         when(ingredientServiceMock.findByGroupName(ingredientType)).thenReturn(ingredients);
 
         String items = String.format("%s.items", ingredientType);
-        var resultActions = mockMvc.perform(makePreAuthorizedRequest(USER, USER,
-                get(basePath)
-                        .param("filter", ingredientType)));
+        var resultActions = mockMvc.perform(asUser(get(basePath))
+                .param("filter", ingredientType));
         resultActions
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -154,9 +153,8 @@ public class IngredientsRestControllerTest extends ARestControllerTest {
 
         when(ingredientServiceMock.findByGroupName(DRINKS)).thenReturn(Collections.emptyList());
 
-        mockMvc.perform(makePreAuthorizedRequest(USER, USER,
-                get(basePath)
-                        .param("filter", DRINKS)))
+        mockMvc.perform(asUser(get(basePath))
+                        .param("filter", DRINKS))
 
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -174,13 +172,12 @@ public class IngredientsRestControllerTest extends ARestControllerTest {
 
         when(ingredientServiceMock.findByGroupName(UNKNOWN)).thenThrow(new IllegalArgumentException("Unknown group name: " + UNKNOWN));
 
-        mockMvc.perform(makePreAuthorizedRequest(USER, USER,
-                get(basePath)
-                        .param("filter", UNKNOWN)))
+        mockMvc.perform(asUser(get(basePath))
+                        .param("filter", UNKNOWN))
 
                 .andExpect(status().isBadRequest())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(content().string(containsString("errorMessage\":\"Unknown group name: " + UNKNOWN)));
+                .andExpect(jsonPath("errorMessage", equalTo("Unknown group name: " + UNKNOWN)));
 
         verify(ingredientServiceMock, times(1)).findByGroupName("unknown");
         verifyNoMoreInteractions(ingredientServiceMock);

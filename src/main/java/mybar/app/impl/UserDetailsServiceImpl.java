@@ -19,7 +19,7 @@ import java.util.List;
 /*
  * Spring-security requires an implementation of UserDetailService.
  */
-@Service("userDetailsService")
+@Service
 @Transactional(readOnly = true)
 public class UserDetailsServiceImpl implements UserDetailsService {
 

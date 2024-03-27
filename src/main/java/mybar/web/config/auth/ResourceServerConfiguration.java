@@ -1,70 +1,100 @@
 package mybar.web.config.auth;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
-import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.config.annotation.web.configuration.EnableResourceServer;
-import org.springframework.security.oauth2.config.annotation.web.configuration.ResourceServerConfigurerAdapter;
+import org.springframework.security.oauth2.server.authorization.OAuth2TokenType;
+import org.springframework.security.oauth2.server.authorization.token.JwtEncodingContext;
+import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.web.SecurityFilterChain;
 
-@Configuration
-@EnableResourceServer
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import static org.springframework.security.config.Customizer.withDefaults;
+
 @EnableWebSecurity
-@EnableGlobalMethodSecurity(securedEnabled = true, jsr250Enabled = true)
-public class ResourceServerConfiguration extends ResourceServerConfigurerAdapter {
+@Configuration(proxyBeanMethods = false)
+@EnableMethodSecurity(securedEnabled = true, jsr250Enabled = true)
+public class ResourceServerConfiguration {
 
     private final UserDetailsService userDetailsService;
     private final PasswordEncoder passwordEncoder;
 
-    @Autowired
-    public ResourceServerConfiguration(UserDetailsService userDetailsService, PasswordEncoder passwordEncoder) {
-        super();
+    public ResourceServerConfiguration(@Qualifier("userDetailsService") UserDetailsService userDetailsService, PasswordEncoder passwordEncoder) {
         this.userDetailsService = userDetailsService;
         this.passwordEncoder = passwordEncoder;
     }
 
-    // global security concerns
+    @Bean
+    @Order(2)
+    public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
+        JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
+        jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(new JwtRoleConverter());
 
-    public AuthenticationProvider authenticationProvider() {
-        final DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider();
-        authenticationProvider.setUserDetailsService(userDetailsService);
-        authenticationProvider.setPasswordEncoder(passwordEncoder);
-        return authenticationProvider;
+        http
+                .authorizeHttpRequests(authorize ->
+                        authorize
+                                .requestMatchers("/**/menu").permitAll()
+                                .requestMatchers("/**/users/register").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/**/users").hasRole("ADMIN")
+                                .requestMatchers("/**/users/changePassword").authenticated()
+                                .requestMatchers("/**/cocktails/**").hasRole("USER")
+                                .requestMatchers("/**/ingredients/**").hasRole("USER")
+                                .requestMatchers("/**/shelf/**").hasRole("USER")
+                                .requestMatchers("/**/rates/history").hasRole("ADMIN")
+                                .requestMatchers("/**/rates/**").hasRole("USER")
+                                .requestMatchers("/api/bar/**").authenticated()
+                                .anyRequest().authenticated()
+                )
+                .cors(withDefaults())
+                .csrf(AbstractHttpConfigurer::disable)
+                .oauth2ResourceServer(oauth2 -> oauth2
+                        .jwt(jwtConfigurer -> jwtConfigurer.jwtAuthenticationConverter(jwtAuthenticationConverter))
+                );
+        return http.formLogin(withDefaults()).build();
     }
 
-    @Autowired
-    public void configureGlobal(final AuthenticationManagerBuilder authenticationManagerBuilder) {
-        authenticationManagerBuilder.authenticationProvider(authenticationProvider());
+    @Bean
+    public AuthenticationManager authenticationManager() {
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+        authProvider.setUserDetailsService(userDetailsService);
+        authProvider.setPasswordEncoder(passwordEncoder);
+        return new ProviderManager(authProvider);
     }
 
-    // http security concerns
+    @Bean
+    OAuth2TokenCustomizer<JwtEncodingContext> jwtCustomizer() {
+        return context -> {
+            if (context.getTokenType() == OAuth2TokenType.ACCESS_TOKEN) {
+                Authentication principal = context.getPrincipal();
+                Set<String> authorities = principal.getAuthorities()
+                        .stream()
+                        .map(GrantedAuthority::getAuthority)
+                        .collect(Collectors.toSet());
+                context.getClaims().claim("roles", authorities);
+            }
+        };
+    }
 
-    @Override
-    public void configure(final HttpSecurity httpSecurity) throws Exception {
-        httpSecurity
-                .cors()
-                .and()
-                .authorizeRequests()
-                .antMatchers("/**/menu").permitAll()
-                .antMatchers("/**/cocktails/**").hasRole("USER")
-                .antMatchers("/**/ingredients/**").hasRole("USER")
-                .antMatchers("/**/shelf/**").hasRole("USER")
-                .antMatchers("/**/rates/history").hasRole("ADMIN")
-                .antMatchers("/**/rates/**").hasRole("USER")
-                .antMatchers("/**/users/register").permitAll()
-                .antMatchers("/api/bar/**").authenticated()
-                .anyRequest().authenticated()
-                .and()
-                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                .and()
-                .csrf().disable();
+    @Bean
+    public WebSecurityCustomizer debugCustomizer() {
+        return web -> web.debug(false);
     }
 
 }

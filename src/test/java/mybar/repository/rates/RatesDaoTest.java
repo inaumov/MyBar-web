@@ -108,8 +108,8 @@ public class RatesDaoTest extends BaseDaoTest {
 
         assertThat(allAverageRates)
                 .hasSize(5);
-        assertThat(allAverageRates.get(0).get("avg_stars", Double.class))
-                .isEqualTo(new Double("9.5"));
+        assertThat(allAverageRates.getFirst().get("avg_stars", Double.class))
+                .isEqualTo(Double.parseDouble("9.5"));
     }
 
 }

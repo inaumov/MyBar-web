@@ -1,118 +1,127 @@
 package mybar.web.config.auth;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import com.nimbusds.jose.jwk.JWKSet;
+import com.nimbusds.jose.jwk.RSAKey;
+import com.nimbusds.jose.jwk.source.JWKSource;
+import com.nimbusds.jose.proc.SecurityContext;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
+import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.config.annotation.configurers.ClientDetailsServiceConfigurer;
-import org.springframework.security.oauth2.config.annotation.web.configuration.AuthorizationServerConfigurerAdapter;
-import org.springframework.security.oauth2.config.annotation.web.configuration.EnableAuthorizationServer;
-import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerEndpointsConfigurer;
-import org.springframework.security.oauth2.config.annotation.web.configurers.AuthorizationServerSecurityConfigurer;
-import org.springframework.security.oauth2.provider.token.DefaultTokenServices;
-import org.springframework.security.oauth2.provider.token.TokenStore;
-import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenConverter;
-import org.springframework.security.oauth2.provider.token.store.JwtTokenStore;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.filter.CorsFilter;
+import org.springframework.security.oauth2.core.AuthorizationGrantType;
+import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.server.authorization.client.InMemoryRegisteredClientRepository;
+import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
+import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
+import org.springframework.security.oauth2.server.authorization.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
+import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer;
+import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
+import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
+import org.springframework.security.oauth2.server.authorization.settings.TokenSettings;
+import org.springframework.security.web.SecurityFilterChain;
 
-@Configuration
-@EnableAuthorizationServer
-public class AuthorizationServerConfiguration extends AuthorizationServerConfigurerAdapter {
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.NoSuchAlgorithmException;
+import java.security.interfaces.RSAPrivateKey;
+import java.security.interfaces.RSAPublicKey;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
+import java.util.UUID;
 
-    private AuthenticationManager authenticationManager;
-    private UserDetailsService userDetailsService;
-    private PasswordEncoder passwordEncoder;
+@Configuration(proxyBeanMethods = false)
+public class AuthorizationServerConfiguration {
 
-    @Value("signing-key:some-pretty-key")
-    private String signingKey;
+    private final PasswordEncoder passwordEncoder;
+    @Value("${spring.security.oauth2.authorizationserver.issuer-url}")
+    private String issuerUrl;
+    @Value("${spring.security.oauth2.authorizationserver.introspection-endpoint}")
+    private String introspectionEndpoint;
 
-    @Autowired
-    public AuthorizationServerConfiguration(AuthenticationManager authenticationManager, UserDetailsService userDetailsService, PasswordEncoder passwordEncoder) {
-        this.authenticationManager = authenticationManager;
-        this.userDetailsService = userDetailsService;
+    public AuthorizationServerConfiguration(PasswordEncoder passwordEncoder) {
         this.passwordEncoder = passwordEncoder;
     }
 
-    public AuthorizationServerConfiguration() {
-        super();
-    }
-
-    // beans
-
     @Bean
-    public JwtAccessTokenConverter accessTokenConverter() {
-        final JwtAccessTokenConverter accessTokenConverter = new JwtAccessTokenConverter();
-        accessTokenConverter.setSigningKey(signingKey);
-        return accessTokenConverter;
+    @Order(Ordered.HIGHEST_PRECEDENCE)
+    public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity httpSecurity)
+            throws Exception {
+        OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(httpSecurity);
+        httpSecurity.getConfigurer(OAuth2AuthorizationServerConfigurer.class);
+        // Form login handles the redirect to the login page from the
+        // authorization server filter chain
+        return httpSecurity.formLogin(Customizer.withDefaults()).build();
     }
 
     @Bean
-    public TokenStore tokenStore() {
-        return new JwtTokenStore(accessTokenConverter());
+    public RegisteredClientRepository registeredClientRepository() {
+        return new InMemoryRegisteredClientRepository(
+                RegisteredClient.withId("app-client-id")
+                        .clientId("my-bar-app")
+                        .clientSecret(passwordEncoder.encode("secret001"))
+                        .redirectUri("http://127.0.0.1:8080/api/bar/authorized")
+                        .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
+                        .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
+                        .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
+                        .tokenSettings(TokenSettings.builder()
+                                .accessTokenTimeToLive(Duration.of(30, ChronoUnit.MINUTES))
+                                .refreshTokenTimeToLive(Duration.of(24, ChronoUnit.HOURS))
+                                .reuseRefreshTokens(true)
+                                .authorizationCodeTimeToLive(Duration.of(120, ChronoUnit.SECONDS))
+                                .build())
+                        .scope("read")
+                        .scope("write")
+                        .build()
+        );
     }
 
     @Bean
-    @Primary
-    public DefaultTokenServices defaultTokenServices() {
-        DefaultTokenServices defaultTokenServices = new DefaultTokenServices();
-        defaultTokenServices.setTokenStore(tokenStore());
-        defaultTokenServices.setSupportRefreshToken(true);
-        return defaultTokenServices;
+    public AuthorizationServerSettings authorizationServerSettings() {
+        return AuthorizationServerSettings.builder()
+                .issuer(issuerUrl)
+                .tokenIntrospectionEndpoint(introspectionEndpoint)
+                .build();
     }
 
-    // config
-
-    @Override
-    public void configure(AuthorizationServerEndpointsConfigurer endpoints) throws Exception {
-        endpoints
-                .tokenStore(tokenStore())
-                .authenticationManager(authenticationManager)
-                .userDetailsService(userDetailsService)
-                .accessTokenConverter(accessTokenConverter());
+    @Bean
+    public ClientSettings clientSettings() {
+        return ClientSettings.builder()
+                .requireAuthorizationConsent(false)
+                .requireProofKey(false)
+                .build();
     }
 
-    @Override
-    public void configure(ClientDetailsServiceConfigurer clients) throws Exception {
-        clients.inMemory()
-                // 1.
-                .withClient("api-tests")
-                .secret(passwordEncoder.encode("bGl2ZS10ZXN0"))
-                .authorizedGrantTypes("password")
-                .scopes("my-bar")
-                .autoApprove("my-bar")
-                .accessTokenValiditySeconds(3600)
-                // 2.
-                .and()
-                .withClient("my-bar-app")
-                .secret(passwordEncoder.encode("secret001"))
-                .authorizedGrantTypes("password", "refresh_token")
-                .refreshTokenValiditySeconds(3600 * 24)
-                .scopes("my-bar")
-                .autoApprove("my-bar")
-                .accessTokenValiditySeconds(3600);
+    @Bean
+    public JwtDecoder jwtDecoder(JWKSource<SecurityContext> jwkSource) {
+        return OAuth2AuthorizationServerConfiguration.jwtDecoder(jwkSource);
     }
 
-    @Override
-    public void configure(AuthorizationServerSecurityConfigurer security) {
-        security.tokenKeyAccess("permitAll()")
-                .checkTokenAccess("isAuthenticated()");
+    @Bean
+    public JWKSource<SecurityContext> jwkSource() throws NoSuchAlgorithmException {
+        RSAKey rsaKey = generateRsa();
+        JWKSet jwkSet = new JWKSet(rsaKey);
+        return (jwkSelector, securityContext) -> jwkSelector.select(jwkSet);
+    }
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        CorsConfiguration config = new CorsConfiguration();
-        config.applyPermitDefaultValues();
+    private static RSAKey generateRsa() throws NoSuchAlgorithmException {
+        KeyPair keyPair = generateRsaKey();
+        RSAPublicKey publicKey = (RSAPublicKey) keyPair.getPublic();
+        RSAPrivateKey privateKey = (RSAPrivateKey) keyPair.getPrivate();
+        return new RSAKey.Builder(publicKey)
+                .privateKey(privateKey)
+                .keyID(UUID.randomUUID().toString())
+                .build();
+    }
 
-        // add allow-origin to the headers
-        config.addAllowedHeader("access-control-allow-origin");
-
-        source.registerCorsConfiguration("/oauth/token", config);
-        CorsFilter filter = new CorsFilter(source);
-        security.addTokenEndpointAuthenticationFilter(filter);
+    private static KeyPair generateRsaKey() throws NoSuchAlgorithmException {
+        KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
+        keyPairGenerator.initialize(2048);
+        return keyPairGenerator.generateKeyPair();
     }
 
 }

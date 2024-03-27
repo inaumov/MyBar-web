@@ -8,6 +8,7 @@ import mybar.exception.users.UnknownUserException;
 import mybar.exception.users.UserExistsException;
 import mybar.service.users.UserService;
 import mybar.web.rest.ARestControllerTest;
+import mybar.web.rest.users.exception.UsersRestExceptionProcessor;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -17,20 +18,25 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import java.util.Collections;
 
 import static org.hamcrest.Matchers.*;
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(UserController.class)
+@ContextConfiguration(
+        classes = {
+                UserController.class,
+                UsersRestExceptionProcessor.class
+        }
+)
 public class UserControllerTest extends ARestControllerTest {
     public static final String basePath = "/v1/users";
 
@@ -41,9 +47,6 @@ public class UserControllerTest extends ARestControllerTest {
     public static final String EMAIL = "joe@example.com";
     public static final String EMAIL_OBFUSCATED = "j***@e***e.com";
     public static final String PASSWORD = "joe.pwd";
-
-    public static final String ROLE_USER = "USER";
-    public static final String ROLE_ADMIN = "ADMIN";
 
     @Autowired
     private MockMvc mockMvc;
@@ -66,7 +69,7 @@ public class UserControllerTest extends ARestControllerTest {
         when(userService.createUser(Mockito.any(IUser.class))).thenReturn(userDto);
 
         MockHttpServletRequestBuilder requestBuilder =
-                MockMvcRequestBuilders.post(basePath + "/register")
+                post(basePath + "/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(createUserInJson(
                                 USERNAME,
@@ -77,7 +80,7 @@ public class UserControllerTest extends ARestControllerTest {
         this.mockMvc.perform(requestBuilder)
                 .andDo(MockMvcResultHandlers.print())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers.status()
+                .andExpect(status()
                         .isCreated())
 
                 .andExpect(jsonPath("$.username", is(USERNAME)))
@@ -107,7 +110,7 @@ public class UserControllerTest extends ARestControllerTest {
         when(userService.createUser(Mockito.any(IUser.class))).thenThrow(new EmailDuplicatedException(EMAIL));
 
         MockHttpServletRequestBuilder requestBuilder =
-                MockMvcRequestBuilders.post(basePath + "/register")
+                post(basePath + "/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(createUserInJson(
                                 USERNAME,
@@ -119,9 +122,9 @@ public class UserControllerTest extends ARestControllerTest {
 
                 .andDo(MockMvcResultHandlers.print())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers.status()
+                .andExpect(status()
                         .isForbidden())
-                .andExpect(content().string(containsString("errorMessage\":\"There is an account with that email: " + EMAIL)));
+                .andExpect(jsonPath("errorMessage", equalTo("There is an account with that email: " + EMAIL)));
 
         verify(userService, atLeastOnce()).createUser(Mockito.any(IUser.class));
     }
@@ -131,7 +134,7 @@ public class UserControllerTest extends ARestControllerTest {
         when(userService.createUser(Mockito.any(IUser.class))).thenThrow(new UserExistsException(USERNAME));
 
         MockHttpServletRequestBuilder requestBuilder =
-                MockMvcRequestBuilders.post(basePath + "/register")
+                post(basePath + "/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(createUserInJson(
                                 USERNAME,
@@ -143,9 +146,8 @@ public class UserControllerTest extends ARestControllerTest {
 
                 .andDo(MockMvcResultHandlers.print())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers.status()
-                        .isForbidden())
-                .andExpect(content().string(containsString("errorMessage\":\"Username [" + USERNAME + "] has been already occupied")));
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("errorMessage", equalTo("Username [" + USERNAME + "] has been already occupied")));
 
         verify(userService, atLeastOnce()).createUser(Mockito.any(IUser.class));
     }
@@ -156,13 +158,13 @@ public class UserControllerTest extends ARestControllerTest {
         when(userService.getAllRegisteredUsers()).thenReturn(Collections.singletonList(userDto));
 
         // get all users
-        MockHttpServletRequestBuilder requestBuilder = makePreAuthorizedRequest(ADMIN, ADMIN, MockMvcRequestBuilders.get(basePath));
+        MockHttpServletRequestBuilder requestBuilder = asAdmin(get(basePath));
 
         this.mockMvc.perform(requestBuilder)
 
                 .andDo(MockMvcResultHandlers.print())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers.status()
+                .andExpect(status()
                         .isOk())
 
                 .andExpect(jsonPath("$.count", is(1)))
@@ -187,13 +189,8 @@ public class UserControllerTest extends ARestControllerTest {
         when(userService.getAllRegisteredUsers()).thenReturn(Collections.singletonList(userDto));
 
         // get all users
-        MockHttpServletRequestBuilder requestBuilder = makePreAuthorizedRequest(USER, USER, MockMvcRequestBuilders.get(basePath));
-
-        this.mockMvc.perform(requestBuilder)
-
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers.status()
-                        .isForbidden());
+        this.mockMvc.perform(asUser(get(basePath)))
+                .andExpect(status().isForbidden());
     }
 
     @Test
@@ -202,7 +199,7 @@ public class UserControllerTest extends ARestControllerTest {
         userDto.setEmail("joe@gmail.com");
         when(userService.editUserInfo(Mockito.any(IUser.class))).thenReturn(userDto);
 
-        MockHttpServletRequestBuilder requestBuilder = makePreAuthorizedRequest(USER, USER, MockMvcRequestBuilders.put(basePath))
+        MockHttpServletRequestBuilder requestBuilder = asUser(put(basePath))
                 .content(createUserInJson(
                         USERNAME,
                         "joe@gmail.com",
@@ -212,7 +209,7 @@ public class UserControllerTest extends ARestControllerTest {
         this.mockMvc.perform(requestBuilder)
                 .andDo(MockMvcResultHandlers.print())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers.status()
+                .andExpect(status()
                         .isOk())
 
                 .andExpect(jsonPath("$.username", is(USERNAME)))
@@ -237,31 +234,30 @@ public class UserControllerTest extends ARestControllerTest {
             when(userService.findByUsername(Mockito.eq(USER))).thenReturn(user);
             doNothing().when(userService).changePassword(Mockito.same(user), Mockito.anyString());
 
-            MockHttpServletRequestBuilder requestBuilder = makePreAuthorizedRequest(USER, USER, MockMvcRequestBuilders.put(basePath + "/{0}/changePassword", USER))
+            MockHttpServletRequestBuilder requestBuilder = asUser(put(basePath + "/changePassword"))
                     .content("{\"newPassword\":\"changeit\"}");
 
             mockMvc.perform(requestBuilder)
-                    .andExpect(MockMvcResultMatchers.status()
+                    .andExpect(status()
                             .isAccepted());
 
             verify(userService, atLeastOnce()).changePassword(Mockito.same(user), Mockito.eq("changeit"));
         }
 
         @Test
-        public void not_own_user_access_denied() throws Exception {
+        public void admin_password_accepted() throws Exception {
             final IUser user = mock(IUser.class);
-            when(user.getUsername()).thenReturn(USERNAME);
-            when(userService.findByUsername(Mockito.eq(USERNAME))).thenReturn(user);
+            when(user.getUsername()).thenReturn(ADMIN);
+            when(userService.findByUsername(Mockito.eq(ADMIN))).thenReturn(user);
             doNothing().when(userService).changePassword(Mockito.same(user), Mockito.anyString());
 
-            MockHttpServletRequestBuilder requestBuilder = makePreAuthorizedRequest(USER, USER, MockMvcRequestBuilders.put(basePath + "/{0}/changePassword", USERNAME))
+            MockHttpServletRequestBuilder requestBuilder = asAdmin(put(basePath + "/changePassword"))
                     .content("{\"newPassword\":\"changeit\"}");
 
             mockMvc.perform(requestBuilder)
-                    .andExpect(MockMvcResultMatchers.status()
-                            .isForbidden());
+                    .andExpect(status().isAccepted());
 
-            verify(userService, never()).changePassword(Mockito.same(user), Mockito.eq("changeit"));
+            verify(userService, atLeastOnce()).changePassword(Mockito.same(user), Mockito.eq("changeit"));
         }
 
         @ParameterizedTest
@@ -272,27 +268,28 @@ public class UserControllerTest extends ARestControllerTest {
             when(userService.findByUsername(Mockito.eq(USER))).thenReturn(user);
             doNothing().when(userService).changePassword(Mockito.same(user), Mockito.eq(password));
 
-            MockHttpServletRequestBuilder requestBuilder = makePreAuthorizedRequest(USER, USER, MockMvcRequestBuilders.put(basePath + "/{0}/changePassword", USER))
+            MockHttpServletRequestBuilder requestBuilder = asUser(put(basePath + "/changePassword"))
                     .content(String.format("{\"newPassword\":\"%s\"}", password));
 
             mockMvc.perform(requestBuilder)
-                    .andExpect(MockMvcResultMatchers.status()
+                    .andExpect(jsonPath("errorMessage", equalTo("Invalid parameter value received")))
+                    .andExpect(status()
                             .isBadRequest());
         }
     }
 
     @Test
     public void test_deactivate_user_authenticated_with_role_user() throws Exception {
-        doNothing().when(userService).deactivateUser(eq(USERNAME));
+        doNothing().when(userService).deactivateUser(eq(USER));
 
-        MockHttpServletRequestBuilder requestBuilder = makePreAuthorizedRequest(USER, USER, MockMvcRequestBuilders.delete(basePath + "/" + USERNAME));
+        MockHttpServletRequestBuilder requestBuilder = asUser(delete(basePath));
 
         this.mockMvc.perform(requestBuilder)
-                .andExpect(MockMvcResultMatchers.status()
+                .andExpect(status()
                         .isNoContent())
                 .andDo(MockMvcResultHandlers.print());
 
-        verify(userService, atLeastOnce()).deactivateUser(eq(USERNAME));
+        verify(userService, atLeastOnce()).deactivateUser(eq(USER));
     }
 
     @Test
@@ -300,13 +297,13 @@ public class UserControllerTest extends ARestControllerTest {
         UserDto userDto = prepareUserDto();
         when(userService.findByUsername(eq(USERNAME))).thenReturn(userDto);
 
-        MockHttpServletRequestBuilder requestBuilder = makePreAuthorizedRequest(USER, USER, MockMvcRequestBuilders.get(basePath + "/" + USERNAME));
+        MockHttpServletRequestBuilder requestBuilder = asUser(get(basePath + "/" + USERNAME));
 
         this.mockMvc.perform(requestBuilder)
 
                 .andDo(MockMvcResultHandlers.print())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers.status()
+                .andExpect(status()
                         .isOk())
 
                 .andExpect(jsonPath("$.username", is(USERNAME)))
@@ -338,15 +335,15 @@ public class UserControllerTest extends ARestControllerTest {
 
         when(userService.findByUsername(eq(USERNAME))).thenThrow(new UnknownUserException(USERNAME));
 
-        MockHttpServletRequestBuilder requestBuilder = makePreAuthorizedRequest(USER, USER, MockMvcRequestBuilders.get(basePath + "/" + USERNAME));
+        MockHttpServletRequestBuilder requestBuilder = asUser(get(basePath + "/" + USERNAME));
 
         this.mockMvc.perform(requestBuilder)
                 .andDo(MockMvcResultHandlers.print())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers.status()
+                .andExpect(status()
                         .isNotFound())
 
-                .andExpect(content().string(containsString("errorMessage\":\"User=[" + USERNAME + "] is unknown.")))
+                .andExpect(jsonPath("errorMessage", equalTo("User=[" + USERNAME + "] is unknown.")))
                 .andDo(MockMvcResultHandlers.print());
 
         verify(userService, atLeastOnce()).findByUsername(USERNAME);

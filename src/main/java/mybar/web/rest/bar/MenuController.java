@@ -12,11 +12,10 @@ import org.springframework.hateoas.Link;
 import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.text.MessageFormat;
 import java.util.*;
 
 @RestController
@@ -35,7 +34,7 @@ public class MenuController {
 
     //-------------------Retrieve Menu List--------------------------------------------------------
 
-    @RequestMapping(method = RequestMethod.GET)
+    @GetMapping
     public ResponseEntity<List<MenuBean>> listAllMenuItems() {
         log.info("Fetching menu items list...");
 
@@ -45,7 +44,7 @@ public class MenuController {
             return new ResponseEntity<>(Collections.emptyList(), HttpStatus.OK);
         }
         // converted into response beans
-        List<MenuBean> menuBeans = convertWithTranslations(allMenuItems);
+        List<MenuBean> menuBeans = toResponseWithTranslations(allMenuItems);
         for (MenuBean menuBean : menuBeans) {
             Link link = WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(CocktailsController.class)
             .allCocktails(menuBean.getName())).withRel("allCocktails");
@@ -54,7 +53,7 @@ public class MenuController {
         return new ResponseEntity<>(menuBeans, HttpStatus.OK);
     }
 
-    private List<MenuBean> convertWithTranslations(Collection<IMenu> menuItems) {
+    private List<MenuBean> toResponseWithTranslations(Collection<IMenu> menuItems) {
         List<MenuBean> convertedList = new ArrayList<>();
         Locale locale = LocaleContextHolder.getLocale();
         for (IMenu menu : menuItems) {
@@ -62,7 +61,7 @@ public class MenuController {
             from.setTranslation(messageSource.getMessage(menu.getName(), null, locale));
             convertedList.add(from);
         }
-        log.info(MessageFormat.format("Found {0} items in menu list.", menuItems.size()));
+        log.info("Found {} items in menu list.", menuItems.size());
         return convertedList;
     }
 
