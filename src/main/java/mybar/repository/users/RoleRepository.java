@@ -7,7 +7,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface RoleDao extends JpaRepository<Role, String> {
+public interface RoleRepository extends JpaRepository<Role, String> {
 
     List<Role> findByRoleNameIn(List<String> roleNames);
 }

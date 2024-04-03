@@ -6,62 +6,61 @@
     <MENU ID="2" NAME="long"/>
     <MENU ID="3" NAME="smoothie"/>
 
-    <COCKTAIL ID="cocktail-000001" MENU_ID="1" NAME="B52" DESCRIPTION="The B-52 cocktail is a layered shot composed of a coffee liqueur, an Irish cream, and a triple sec. When prepared properly, the ingredients separate into three distinctly visible layers." IMAGE_URL="http://www.allcocktails.net/gallery/b-52-cocktail/b52-cocktail.png"/>
-    <COCKTAIL ID="cocktail-000002" MENU_ID="1" NAME="B53"/>
-    <COCKTAIL ID="cocktail-000003" MENU_ID="1" NAME="Green Mexican"/>
-    <COCKTAIL ID="cocktail-000004" MENU_ID="1" NAME="Blow Job"/>
-    <COCKTAIL ID="cocktail-000005" MENU_ID="2" NAME="Long Island Iced Tea" DESCRIPTION="A Long Island Iced Tea is a type of alcoholic mixed drink typically made with, among other ingredients, tequila, vodka, light rum, triple sec, and gin. It is so named because of the resemblance to the color and taste of iced tea." IMAGE_URL="http://liquor.s3.amazonaws.com/wp-content/uploads/2013/07/Long-Island-Iced-Tea.jpg"/>
-    <COCKTAIL ID="cocktail-000006" MENU_ID="2" NAME="Tequila Sunrise"/>
-    <COCKTAIL ID="cocktail-000007" MENU_ID="2" NAME="Black Russian"/>
-    <COCKTAIL ID="cocktail-000008" MENU_ID="2" NAME="Hurricane"/>
-    <COCKTAIL ID="cocktail-000009" MENU_ID="2" NAME="Mai Tai"/>
-    <COCKTAIL ID="cocktail-000010" MENU_ID="2" NAME="Margarita" DESCRIPTION="The margarita is a cocktail consisting of tequila, triple sec and lime or lemon juice, often served with salt on the rim of the glass. The drink is served shaken with ice, blended with ice, or without ice." IMAGE_URL="http://liquor.s3.amazonaws.com/wp-content/uploads/2013/02/Margarita-new.jpg"/>
-    <COCKTAIL ID="cocktail-000011" MENU_ID="2" NAME="Sex on the beach"/>
-    <COCKTAIL ID="cocktail-000012" MENU_ID="3" NAME="Banana Blast II"/>
+    <COCKTAILS ID="cocktail-000001" MENU_ID="1" NAME="B52" DESCRIPTION="The B-52 cocktail is a layered shot composed of a coffee liqueur, an Irish cream, and a triple sec. When prepared properly, the ingredients separate into three distinctly visible layers." IMAGE_URL="http://www.allcocktails.net/gallery/b-52-cocktail/b52-cocktail.png"/>
+    <COCKTAILS ID="cocktail-000002" MENU_ID="1" NAME="B53"/>
+    <COCKTAILS ID="cocktail-000003" MENU_ID="1" NAME="Green Mexican"/>
+    <COCKTAILS ID="cocktail-000004" MENU_ID="1" NAME="Blow Job"/>
+    <COCKTAILS ID="cocktail-000005" MENU_ID="2" NAME="Long Island Iced Tea" DESCRIPTION="A Long Island Iced Tea is a type of alcoholic mixed drink typically made with, among other ingredients, tequila, vodka, light rum, triple sec, and gin. It is so named because of the resemblance to the color and taste of iced tea." IMAGE_URL="http://liquor.s3.amazonaws.com/wp-content/uploads/2013/07/Long-Island-Iced-Tea.jpg"/>
+    <COCKTAILS ID="cocktail-000006" MENU_ID="2" NAME="Tequila Sunrise"/>
+    <COCKTAILS ID="cocktail-000007" MENU_ID="2" NAME="Black Russian"/>
+    <COCKTAILS ID="cocktail-000008" MENU_ID="2" NAME="Hurricane"/>
+    <COCKTAILS ID="cocktail-000009" MENU_ID="2" NAME="Mai Tai"/>
+    <COCKTAILS ID="cocktail-000010" MENU_ID="2" NAME="Margarita" DESCRIPTION="The margarita is a cocktail consisting of tequila, triple sec and lime or lemon juice, often served with salt on the rim of the glass. The drink is served shaken with ice, blended with ice, or without ice." IMAGE_URL="http://liquor.s3.amazonaws.com/wp-content/uploads/2013/02/Margarita-new.jpg"/>
+    <COCKTAILS ID="cocktail-000011" MENU_ID="2" NAME="Sex on the beach"/>
+    <COCKTAILS ID="cocktail-000012" MENU_ID="3" NAME="Banana Blast II"/>
 
-    <INGREDIENT ID="1" GROUP_NAME="Beverage" KIND="Vodka" TYPE="DISTILLED"/>
-    <INGREDIENT ID="2" GROUP_NAME="Beverage" KIND="Gin" TYPE="DISTILLED"/>
-    <INGREDIENT ID="3" GROUP_NAME="Beverage" KIND="Rum" TYPE="DISTILLED"/>
-    <INGREDIENT ID="4" GROUP_NAME="Beverage" KIND="Tequila" TYPE="DISTILLED"/>
-    <INGREDIENT ID="5" GROUP_NAME="Beverage" KIND="Bourbon" TYPE="DISTILLED"/>
-    <INGREDIENT ID="6" GROUP_NAME="Beverage" KIND="Whisky" TYPE="DISTILLED"/>
-    <INGREDIENT ID="7" GROUP_NAME="Beverage" KIND="Brandy" TYPE="DISTILLED"/>
-    <INGREDIENT ID="8" GROUP_NAME="Beverage" KIND="Triple Sec" TYPE="DISTILLED"/>
-    <INGREDIENT ID="9" GROUP_NAME="Beverage" KIND="Maraschino liqueur" TYPE="DISTILLED"/>
-    <INGREDIENT ID="10" GROUP_NAME="Beverage" KIND="Banana liqueur" TYPE="DISTILLED"/>
-    <INGREDIENT ID="11" GROUP_NAME="Beverage" KIND="Irish cream" TYPE="DISTILLED"/>
-    <INGREDIENT ID="12" GROUP_NAME="Additive" KIND="Grenadine" TYPE="1"/>
-    <INGREDIENT ID="13" GROUP_NAME="Drink" KIND="Orange Juice" TYPE="JUICE"/>
-    <INGREDIENT ID="14" GROUP_NAME="Additive" KIND="Ice" TYPE="1"/>
-    <INGREDIENT ID="15" GROUP_NAME="Additive" KIND="Sugar" TYPE="1"/>
-    <INGREDIENT ID="16" GROUP_NAME="Beverage" KIND="Coffee liqueur" TYPE="DISTILLED"/>
-    <INGREDIENT ID="17" GROUP_NAME="Drink" KIND="Coca Cola" TYPE="SODA"/>
-    <INGREDIENT ID="18" GROUP_NAME="Additive" KIND="Lime" TYPE="2"/>
+    <INGREDIENTS ID="1" GROUP_NAME="Beverage" KIND="Vodka" TYPE="DISTILLED"/>
+    <INGREDIENTS ID="2" GROUP_NAME="Beverage" KIND="Gin" TYPE="DISTILLED"/>
+    <INGREDIENTS ID="3" GROUP_NAME="Beverage" KIND="Rum" TYPE="DISTILLED"/>
+    <INGREDIENTS ID="4" GROUP_NAME="Beverage" KIND="Tequila" TYPE="DISTILLED"/>
+    <INGREDIENTS ID="5" GROUP_NAME="Beverage" KIND="Bourbon" TYPE="DISTILLED"/>
+    <INGREDIENTS ID="6" GROUP_NAME="Beverage" KIND="Whisky" TYPE="DISTILLED"/>
+    <INGREDIENTS ID="7" GROUP_NAME="Beverage" KIND="Brandy" TYPE="DISTILLED"/>
+    <INGREDIENTS ID="8" GROUP_NAME="Beverage" KIND="Triple Sec" TYPE="DISTILLED"/>
+    <INGREDIENTS ID="9" GROUP_NAME="Beverage" KIND="Maraschino liqueur" TYPE="DISTILLED"/>
+    <INGREDIENTS ID="10" GROUP_NAME="Beverage" KIND="Banana liqueur" TYPE="DISTILLED"/>
+    <INGREDIENTS ID="11" GROUP_NAME="Beverage" KIND="Irish cream" TYPE="DISTILLED"/>
+    <INGREDIENTS ID="12" GROUP_NAME="Additive" KIND="Grenadine" TYPE="1"/>
+    <INGREDIENTS ID="13" GROUP_NAME="Drink" KIND="Orange Juice" TYPE="JUICE"/>
+    <INGREDIENTS ID="14" GROUP_NAME="Additive" KIND="Ice" TYPE="1"/>
+    <INGREDIENTS ID="15" GROUP_NAME="Additive" KIND="Sugar" TYPE="1"/>
+    <INGREDIENTS ID="16" GROUP_NAME="Beverage" KIND="Coffee liqueur" TYPE="DISTILLED"/>
+    <INGREDIENTS ID="17" GROUP_NAME="Drink" KIND="Coca Cola" TYPE="SODA"/>
+    <INGREDIENTS ID="18" GROUP_NAME="Additive" KIND="Lime" TYPE="2"/>
 
-    <COCKTAIL_TO_INGREDIENT COCKTAIL_ID="cocktail-000001" INGREDIENT_ID="8" VOLUME="20" MEASUREMENT="ML"/>
-    <COCKTAIL_TO_INGREDIENT COCKTAIL_ID="cocktail-000001" INGREDIENT_ID="11" VOLUME="20" MEASUREMENT="ML"/>
-    <COCKTAIL_TO_INGREDIENT COCKTAIL_ID="cocktail-000001" INGREDIENT_ID="16" VOLUME="20" MEASUREMENT="ML"/>
-    <COCKTAIL_TO_INGREDIENT COCKTAIL_ID="cocktail-000007" INGREDIENT_ID="16" VOLUME="50" MEASUREMENT="ML"/>
-    <COCKTAIL_TO_INGREDIENT COCKTAIL_ID="cocktail-000007" INGREDIENT_ID="17" VOLUME="150" MEASUREMENT="ML"/>
-    <COCKTAIL_TO_INGREDIENT COCKTAIL_ID="cocktail-000007" INGREDIENT_ID="14" VOLUME="5" MEASUREMENT="PCS"/>
-    <COCKTAIL_TO_INGREDIENT COCKTAIL_ID="cocktail-000006" INGREDIENT_ID="13" VOLUME="150" MEASUREMENT="ML"/>
-    <COCKTAIL_TO_INGREDIENT COCKTAIL_ID="cocktail-000006" INGREDIENT_ID="4" VOLUME="50" MEASUREMENT="ML"/>
-    <COCKTAIL_TO_INGREDIENT COCKTAIL_ID="cocktail-000006" INGREDIENT_ID="14" VOLUME="5" MEASUREMENT="PCS"/>
-    <COCKTAIL_TO_INGREDIENT COCKTAIL_ID="cocktail-000005" INGREDIENT_ID="1" VOLUME="20" MEASUREMENT="ML"/>
-    <COCKTAIL_TO_INGREDIENT COCKTAIL_ID="cocktail-000005" INGREDIENT_ID="2" VOLUME="20" MEASUREMENT="ML"/>
-    <COCKTAIL_TO_INGREDIENT COCKTAIL_ID="cocktail-000005" INGREDIENT_ID="3" VOLUME="20" MEASUREMENT="ML"/>
-    <COCKTAIL_TO_INGREDIENT COCKTAIL_ID="cocktail-000005" INGREDIENT_ID="4" VOLUME="20" MEASUREMENT="ML"/>
-    <COCKTAIL_TO_INGREDIENT COCKTAIL_ID="cocktail-000005" INGREDIENT_ID="6" VOLUME="20" MEASUREMENT="ML"/>
-    <COCKTAIL_TO_INGREDIENT COCKTAIL_ID="cocktail-000005" INGREDIENT_ID="17" VOLUME="150" MEASUREMENT="ML"/>
-    <COCKTAIL_TO_INGREDIENT COCKTAIL_ID="cocktail-000005" INGREDIENT_ID="14" VOLUME="5" MEASUREMENT="PCS"/>
-    <COCKTAIL_TO_INGREDIENT COCKTAIL_ID="cocktail-000005" INGREDIENT_ID="18" VOLUME="5" MEASUREMENT="PCS"/>
+    <COCKTAILS_TO_INGREDIENTS COCKTAIL_ID="cocktail-000001" INGREDIENT_ID="8" VOLUME="20" MEASUREMENT="ML"/>
+    <COCKTAILS_TO_INGREDIENTS COCKTAIL_ID="cocktail-000001" INGREDIENT_ID="11" VOLUME="20" MEASUREMENT="ML"/>
+    <COCKTAILS_TO_INGREDIENTS COCKTAIL_ID="cocktail-000001" INGREDIENT_ID="16" VOLUME="20" MEASUREMENT="ML"/>
+    <COCKTAILS_TO_INGREDIENTS COCKTAIL_ID="cocktail-000007" INGREDIENT_ID="16" VOLUME="50" MEASUREMENT="ML"/>
+    <COCKTAILS_TO_INGREDIENTS COCKTAIL_ID="cocktail-000007" INGREDIENT_ID="17" VOLUME="150" MEASUREMENT="ML"/>
+    <COCKTAILS_TO_INGREDIENTS COCKTAIL_ID="cocktail-000007" INGREDIENT_ID="14" VOLUME="5" MEASUREMENT="PCS"/>
+    <COCKTAILS_TO_INGREDIENTS COCKTAIL_ID="cocktail-000006" INGREDIENT_ID="13" VOLUME="150" MEASUREMENT="ML"/>
+    <COCKTAILS_TO_INGREDIENTS COCKTAIL_ID="cocktail-000006" INGREDIENT_ID="4" VOLUME="50" MEASUREMENT="ML"/>
+    <COCKTAILS_TO_INGREDIENTS COCKTAIL_ID="cocktail-000006" INGREDIENT_ID="14" VOLUME="5" MEASUREMENT="PCS"/>
+    <COCKTAILS_TO_INGREDIENTS COCKTAIL_ID="cocktail-000005" INGREDIENT_ID="1" VOLUME="20" MEASUREMENT="ML"/>
+    <COCKTAILS_TO_INGREDIENTS COCKTAIL_ID="cocktail-000005" INGREDIENT_ID="2" VOLUME="20" MEASUREMENT="ML"/>
+    <COCKTAILS_TO_INGREDIENTS COCKTAIL_ID="cocktail-000005" INGREDIENT_ID="3" VOLUME="20" MEASUREMENT="ML"/>
+    <COCKTAILS_TO_INGREDIENTS COCKTAIL_ID="cocktail-000005" INGREDIENT_ID="4" VOLUME="20" MEASUREMENT="ML"/>
+    <COCKTAILS_TO_INGREDIENTS COCKTAIL_ID="cocktail-000005" INGREDIENT_ID="6" VOLUME="20" MEASUREMENT="ML"/>
+    <COCKTAILS_TO_INGREDIENTS COCKTAIL_ID="cocktail-000005" INGREDIENT_ID="17" VOLUME="150" MEASUREMENT="ML"/>
+    <COCKTAILS_TO_INGREDIENTS COCKTAIL_ID="cocktail-000005" INGREDIENT_ID="14" VOLUME="5" MEASUREMENT="PCS"/>
+    <COCKTAILS_TO_INGREDIENTS COCKTAIL_ID="cocktail-000005" INGREDIENT_ID="18" VOLUME="5" MEASUREMENT="PCS"/>
 
-    <BOTTLE ID="bottle-000001" INGREDIENT_ID="1" VOLUME="0.7" PRICE="120" BRAND_NAME="Absolute" IN_SHELF="true" IMAGE_URL="http://vodka.first.jpg"/>
-    <BOTTLE ID="bottle-000002" INGREDIENT_ID="2" VOLUME="0.75" PRICE="140" BRAND_NAME="" IN_SHELF="true"/>
-    <BOTTLE ID="bottle-000003" INGREDIENT_ID="3" VOLUME="1" PRICE="198.5" BRAND_NAME="Bacardi" IN_SHELF="true"/>
-    <BOTTLE ID="bottle-000004" INGREDIENT_ID="4" VOLUME="1" PRICE="178" BRAND_NAME="" IN_SHELF="true"/>
-    <BOTTLE ID="bottle-000005" INGREDIENT_ID="8" VOLUME="0.5" PRICE="172.35" BRAND_NAME="" IN_SHELF="true"/>
-    <BOTTLE ID="bottle-000006" INGREDIENT_ID="6" VOLUME="1" PRICE="254" BRAND_NAME="" IN_SHELF="true"/>
-    <BOTTLE ID="bottle-000007" INGREDIENT_ID="3" VOLUME="0.5" PRICE="119" BRAND_NAME="Havana Club" IN_SHELF="false" IMAGE_URL="http://rum.last.jpg"/>
-
+    <BOTTLES ID="bottle-000001" INGREDIENT_ID="1" VOLUME="0.7" PRICE="120" BRAND_NAME="Absolute" IN_SHELF="true" IMAGE_URL="http://vodka.first.jpg"/>
+    <BOTTLES ID="bottle-000002" INGREDIENT_ID="2" VOLUME="0.75" PRICE="140" BRAND_NAME="" IN_SHELF="true"/>
+    <BOTTLES ID="bottle-000003" INGREDIENT_ID="3" VOLUME="1" PRICE="198.5" BRAND_NAME="Bacardi" IN_SHELF="true"/>
+    <BOTTLES ID="bottle-000004" INGREDIENT_ID="4" VOLUME="1" PRICE="178" BRAND_NAME="" IN_SHELF="true"/>
+    <BOTTLES ID="bottle-000005" INGREDIENT_ID="8" VOLUME="0.5" PRICE="172.35" BRAND_NAME="" IN_SHELF="true"/>
+    <BOTTLES ID="bottle-000006" INGREDIENT_ID="6" VOLUME="1" PRICE="254" BRAND_NAME="" IN_SHELF="true"/>
+    <BOTTLES ID="bottle-000007" INGREDIENT_ID="3" VOLUME="0.5" PRICE="119" BRAND_NAME="Havana Club" IN_SHELF="false" IMAGE_URL="http://rum.last.jpg"/>
 </dataset>

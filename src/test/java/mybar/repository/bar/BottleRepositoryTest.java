@@ -6,7 +6,8 @@ import com.github.springtestdbunit.assertion.DatabaseAssertionMode;
 import mybar.api.bar.ingredient.BeverageType;
 import mybar.domain.bar.Bottle;
 import mybar.domain.bar.ingredient.Beverage;
-import mybar.repository.BaseDaoTest;
+import mybar.repository.DbUnitBaseTest;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
@@ -20,27 +21,24 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Tests Bottle DAO.
- */
 @DatabaseSetup("classpath:datasets/dataset.xml")
-@ContextConfiguration(classes = BottleDao.class)
-public class BottleDaoTest extends BaseDaoTest {
+@ContextConfiguration(classes = BottleRepository.class)
+public class BottleRepositoryTest extends DbUnitBaseTest {
 
     private static final BigDecimal PRICE = new BigDecimal("119.00");
     @Autowired
-    private BottleDao bottleDao;
+    private BottleRepository bottleRepository;
 
     @Test
-    @ExpectedDatabase(value = "classpath:datasets/dataset.xml", assertionMode = DatabaseAssertionMode.NON_STRICT_UNORDERED)
+    @Order(Integer.MIN_VALUE)
     public void testPreconditions() {
-        // do nothing, just load and check dataSet and context loads
-        assertThat(bottleDao).isNotNull();
+        // do nothing, just check context loads
+        assertThat(bottleRepository).isNotNull();
     }
 
     @Test
     public void testFindAll() {
-        List<Bottle> all = bottleDao.findAll();
+        List<Bottle> all = bottleRepository.findAll();
         assertEquals(7, all.size());
 
         AtomicInteger id = new AtomicInteger();
@@ -49,22 +47,22 @@ public class BottleDaoTest extends BaseDaoTest {
 
     @Test
     public void testDeleteAll() {
-        bottleDao.deleteAll();
+        bottleRepository.deleteAll();
         commit();
 
-        assertEquals(0, countRowsInTable("BOTTLE"));
+        assertEquals(0, countRowsInTable("BOTTLES"));
     }
 
     @Test
     public void testReadById() {
-        Bottle bottle = bottleDao.getOne("bottle-000007");
+        Bottle bottle = bottleRepository.getReferenceById("bottle-000007");
 
         assertLast(bottle);
     }
 
     @Test
     public void testGetBottlesByBeverage() {
-        Bottle bottle = bottleDao.getOne("bottle-000003");
+        Bottle bottle = bottleRepository.getReferenceById("bottle-000003");
 
         assertEquals(3, bottle.getBeverage().getId().intValue());
         assertEquals("Rum", bottle.getBeverage().getKind());
@@ -87,11 +85,11 @@ public class BottleDaoTest extends BaseDaoTest {
     }
 
     @ExpectedDatabase(
-            assertionMode = DatabaseAssertionMode.NON_STRICT,
+            assertionMode = DatabaseAssertionMode.NON_STRICT_UNORDERED,
             columnFilters = {
                     EntityIdExclusionFilter.class
             },
-            value = "classpath:datasets/expected/bottles-create.xml", table = "BOTTLE")
+            value = "classpath:datasets/expected/bottles-create.xml", table = "BOTTLES")
     @Test
     public void testCreateBottle() {
         Bottle bottle = new Bottle();
@@ -103,13 +101,13 @@ public class BottleDaoTest extends BaseDaoTest {
         Beverage beverageRef = testEntityManager.find(Beverage.class, 6);
         bottle.setBeverage(beverageRef);
 
-        Bottle saved = bottleDao.save(bottle);
+        Bottle saved = bottleRepository.save(bottle);
         commit();
 
         assertTrue(StringUtils.hasText(saved.getId()));
     }
 
-    @ExpectedDatabase(value = "classpath:datasets/expected/bottles-update.xml", table = "BOTTLE")
+    @ExpectedDatabase(value = "classpath:datasets/expected/bottles-update.xml", table = "BOTTLES")
     @Test
     public void testUpdateBottle() {
         Bottle bottle = new Bottle();
@@ -126,7 +124,7 @@ public class BottleDaoTest extends BaseDaoTest {
         bottle.setImageUrl("http://whiskey.last.jpg");
 
         // assert updated bottle
-        Bottle updated = bottleDao.save(bottle);
+        Bottle updated = bottleRepository.save(bottle);
         commit();
 
         assertEquals("Johny Walker", updated.getBrandName());
@@ -135,10 +133,10 @@ public class BottleDaoTest extends BaseDaoTest {
         assertTrue(updated.getImageUrl().contains("whiskey"));
     }
 
-    @ExpectedDatabase(value = "classpath:datasets/expected/bottles-delete.xml", table = "BOTTLE")
+    @ExpectedDatabase(value = "classpath:datasets/expected/bottles-delete.xml", table = "BOTTLES")
     @Test
     public void testDeleteBottle() {
-        bottleDao.deleteById("bottle-000001");
+        bottleRepository.deleteById("bottle-000001");
         commit();
     }
 

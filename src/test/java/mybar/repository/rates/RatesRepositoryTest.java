@@ -2,12 +2,12 @@ package mybar.repository.rates;
 
 import com.github.springtestdbunit.annotation.*;
 import com.github.springtestdbunit.assertion.DatabaseAssertionMode;
-import lombok.SneakyThrows;
 import mybar.domain.History;
 import mybar.domain.bar.Cocktail;
 import mybar.domain.rates.Rate;
 import mybar.domain.users.User;
-import mybar.repository.BaseDaoTest;
+import mybar.repository.DbUnitBaseTest;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
@@ -28,20 +28,20 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
         @DatabaseSetup("classpath:datasets/ratesDataSet.xml")
 })
 @DatabaseTearDown(type = DatabaseOperation.TRUNCATE_TABLE, value = "classpath:datasets/ratesDataSet.xml")
-@ContextConfiguration(classes = RatesDao.class)
-public class RatesDaoTest extends BaseDaoTest {
+@ContextConfiguration(classes = RatesRepository.class)
+public class RatesRepositoryTest extends DbUnitBaseTest {
 
     @Autowired
-    private RatesDao ratesDao;
+    private RatesRepository ratesRepository;
 
     private static final String START_DATE_STR = "2013-08-25";
     private static final String RATED_AT_DATETIME_STR = "2018-01-24T23:05:19";
 
     @Test
-    @ExpectedDatabase(value = "classpath:datasets/ratesDataSet.xml", assertionMode = DatabaseAssertionMode.NON_STRICT_UNORDERED)
+    @Order(Integer.MIN_VALUE)
     public void testPreconditions() {
-        // do nothing, just load and check dataSet context loads
-        assertThat(ratesDao).isNotNull();
+        // do nothing, just check context loads
+        assertThat(ratesRepository).isNotNull();
     }
 
     @Test
@@ -49,7 +49,7 @@ public class RatesDaoTest extends BaseDaoTest {
         LocalDate startDate = LocalDate.parse(START_DATE_STR, DateTimeFormatter.ISO_DATE);
         LocalDateTime endDate = LocalDateTime.now();
 
-        List<History> result = ratesDao.getRatedCocktailsForPeriod(startDate.atStartOfDay(), endDate);
+        List<History> result = ratesRepository.getRatedCocktailsForPeriod(startDate.atStartOfDay(), endDate);
         assertFalse(result.isEmpty());
 
         Iterator<History> it = result.iterator();
@@ -67,7 +67,7 @@ public class RatesDaoTest extends BaseDaoTest {
     public void testFindAllRatesForCocktail() {
         Cocktail cocktail = new Cocktail();
         cocktail.setId("cocktail-000001");
-        List<Rate> allRatesForCocktail = ratesDao.findAllRatesForCocktail(cocktail);
+        List<Rate> allRatesForCocktail = ratesRepository.findAllRatesForCocktail(cocktail);
 
         assertThat(allRatesForCocktail)
                 .hasSize(2);
@@ -77,13 +77,12 @@ public class RatesDaoTest extends BaseDaoTest {
     public void testFindAllRatesForUser() {
         User user = new User();
         user.setUsername("JohnDoe");
-        List<Rate> allRatesForCocktail = ratesDao.findAllRatesForUser(user);
+        List<Rate> allRatesForCocktail = ratesRepository.findAllRatesForUser(user);
 
         assertThat(allRatesForCocktail)
                 .hasSize(5);
     }
 
-    @SneakyThrows
     @ExpectedDatabase(
             assertionMode = DatabaseAssertionMode.NON_STRICT_UNORDERED,
             value = "classpath:datasets/expected/rates-save.xml", table = "RATES")
@@ -98,13 +97,13 @@ public class RatesDaoTest extends BaseDaoTest {
         rate.setUser(user);
         rate.setStars(9);
         rate.setRatedAt(rateAtDateTime);
-        ratesDao.save(rate);
+        ratesRepository.save(rate);
         commit();
     }
 
     @Test
     public void testFindAllAverageRates() {
-        List<Tuple> allAverageRates = ratesDao.findAllAverageRates();
+        List<Tuple> allAverageRates = ratesRepository.findAllAverageRates();
 
         assertThat(allAverageRates)
                 .hasSize(5);

@@ -16,16 +16,16 @@ CREATE TABLE users
     PRIMARY KEY (username)
 );
 
-CREATE TABLE user_has_roles
+CREATE TABLE users_has_roles
 (
     username  VARCHAR(255) NOT NULL,
     role_name VARCHAR(255) NOT NULL
 );
 
-ALTER TABLE user_has_roles
+ALTER TABLE users_has_roles
     ADD FOREIGN KEY (role_name)
         REFERENCES roles (role_name);
 
-ALTER TABLE user_has_roles
+ALTER TABLE users_has_roles
     ADD FOREIGN KEY (username)
         REFERENCES users (username);

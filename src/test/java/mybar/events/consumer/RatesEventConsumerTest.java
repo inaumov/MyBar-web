@@ -2,7 +2,6 @@ package mybar.events.consumer;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.SneakyThrows;
 import mybar.config.kafka.KafkaConsumerConfiguration;
 import mybar.dto.RateDto;
 import mybar.events.KafkaTestContext;
@@ -23,6 +22,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.util.ResourceUtils;
 
 import java.io.File;
+import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -47,9 +47,8 @@ class RatesEventConsumerTest extends KafkaTestContext {
     @Value("${my-bar.events.rates-topic-name}")
     private String topic;
 
-    @SneakyThrows
     @Test
-    void testConsumeRatesEvent() {
+    void testConsumeRatesEvent() throws IOException {
         File json = ResourceUtils.getFile("classpath:rated_cocktail_event.json");
 
         var recordObject = objectMapper.readValue(json, new TypeReference<RecordObject<RateDto>>() {

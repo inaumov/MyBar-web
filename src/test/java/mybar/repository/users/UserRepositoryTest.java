@@ -16,15 +16,15 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 @DatabaseSetup("classpath:datasets/usersDataSet.xml")
-@ContextConfiguration(classes = UserDao.class)
-public class UserDaoTest extends UserBaseDaoTest {
+@ContextConfiguration(classes = UserRepository.class)
+public class UserRepositoryTest extends UserBaseRepositoryTest {
 
     @Autowired
-    private UserDao userDao;
+    private UserRepository userRepository;
 
     @Test
     public void testFindUserById() {
-        User user = userDao.getOne(CLIENT2_ID);
+        User user = userRepository.getReferenceById(USERNAME_2);
         assertNotNull(user);
         assertTrue(user.isActive());
         assertEquals("JohnDoe", user.getUsername());
@@ -37,7 +37,7 @@ public class UserDaoTest extends UserBaseDaoTest {
 
     @Test
     public void testSelectAllUsers() {
-        List<User> all = userDao.findAll();
+        List<User> all = userRepository.findAll();
         assertEquals(USERS_CNT, all.size());
     }
 
@@ -56,7 +56,7 @@ public class UserDaoTest extends UserBaseDaoTest {
         Role roleRefAnalyst = testEntityManager.find(Role.class, RoleName.ROLE_ADMIN.name());
         user.setRoles(Collections.singletonList(roleRefAnalyst));
 
-        User saved = userDao.save(user);
+        User saved = userRepository.save(user);
         commit();
 
         assertNotNull(saved);
@@ -67,37 +67,21 @@ public class UserDaoTest extends UserBaseDaoTest {
             value = "classpath:datasets/expected/users-update.xml", table = "USERS")
     @Test
     public void testUpdateUser() {
-        User user = userDao.getOne("analyst");
+        User user = userRepository.getReferenceById("analyst");
         assertNotNull(user);
         user.setName("Johny");
         user.setSurname("Walker");
         user.setEmail("mail@johnyw.com");
         Role roleRefUser = testEntityManager.find(Role.class, RoleName.ROLE_USER.name());
         user.addRole(roleRefUser);
-        User updated = userDao.save(user);
+        User updated = userRepository.save(user);
         commit();
         assertNotNull(updated);
     }
 
-//    @ExpectedDatabase(
-//            assertionMode = DatabaseAssertionMode.NON_STRICT_UNORDERED,
-//            value = "classpath:datasets/expected/users-delete.xml", table = "USERS")
-//    @Test
-//    public void testDeleteUser() {
-//        userDao.deleteById(CLIENT2_ID);
-//        commit();
-//    }
-//
-//    @Test
-//    public void testThrowUserHasCocktailsExceptionWhenDelete() {
-//        assertThrows(Exception.class, () -> {
-//            userDao.deleteById(CLIENT1_ID);
-//        });
-//    }
-
     @Test
     public void testFindByEmail() {
-        User user = userDao.findByEmail("super@mybar.com");
+        User user = userRepository.findByEmail("super@mybar.com");
         assertNotNull(user);
         assertEquals("super", user.getUsername());
         assertEquals("super@mybar.com", user.getEmail());

@@ -18,7 +18,7 @@ import java.util.Collections;
 import java.util.List;
 
 @Repository
-public class IngredientDao {
+public class IngredientRepository {
 
     @PersistenceContext
     protected EntityManager em;
@@ -26,7 +26,7 @@ public class IngredientDao {
     /**
      * Find ingredients by one group name ordered by group name, kind.
      */
-    public List<Ingredient> findByGroupName(String groupName) throws Exception {
+    public List<Ingredient> findByGroupName(String groupName) {
         Class<? extends Ingredient> clazz;
         switch (groupName) {
             case IBeverage.GROUP_NAME: {

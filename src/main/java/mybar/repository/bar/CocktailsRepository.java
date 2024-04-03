@@ -7,7 +7,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface CocktailDao extends JpaRepository<Cocktail, String> {
+public interface CocktailsRepository extends JpaRepository<Cocktail, String> {
 
     List<Cocktail> findByMenuId(int menuId);
 

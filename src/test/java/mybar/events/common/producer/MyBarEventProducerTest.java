@@ -1,6 +1,5 @@
 package mybar.events.common.producer;
 
-import lombok.SneakyThrows;
 import mybar.events.KafkaTestContext;
 import mybar.events.common.api.RecordObject;
 import org.apache.kafka.clients.consumer.Consumer;
@@ -28,7 +27,6 @@ class MyBarEventProducerTest extends KafkaTestContext {
         target = new MyBarEventProducer<>(kafkaTemplate);
     }
 
-    @SneakyThrows
     @Test
     void testProducer() {
         Instant timeSent = target.send(TOPIC, "userX", "testId", new TestEvent("aaa"));

@@ -6,7 +6,7 @@
     <artifactId>service</artifactId>
     <name>MyBar :: Service</name>
     <groupId>my.bar</groupId>
-    <version>2.0.0-SNAPSHOT</version>
+    <version>3.0.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-parent -->
@@ -127,6 +127,10 @@
             <artifactId>spring-boot-starter-test</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-test-autoconfigure</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
         </dependency>
@@ -200,6 +204,15 @@
         </dependency>
     </dependencies>
 
+    <profiles>
+        <profile>
+            <id>fast</id>
+            <properties>
+                <kafka.tests>**/events/**/*.java</kafka.tests>
+            </properties>
+        </profile>
+    </profiles>
+
     <build>
         <plugins>
             <plugin>
@@ -232,8 +245,7 @@
                     <artifactId>maven-surefire-plugin</artifactId>
                     <configuration>
                         <excludes>
-                            <exclude>**/*IntegrationTest.java</exclude>
-                            <exclude>**/*ApiTest.java</exclude>
+                            <exclude>${kafka.tests}</exclude>
                         </excludes>
                         <systemPropertyVariables>
                         </systemPropertyVariables>

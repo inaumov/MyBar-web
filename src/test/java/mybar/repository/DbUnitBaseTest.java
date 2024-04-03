@@ -9,14 +9,13 @@ import org.dbunit.database.DefaultMetadataHandler;
 import org.dbunit.dataset.Column;
 import org.dbunit.dataset.filter.IColumnFilter;
 import org.dbunit.ext.postgresql.PostgresqlDataTypeFactory;
-import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.env.Environment;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.support.DependencyInjectionTestExecutionListener;
 import org.springframework.test.context.transaction.TransactionalTestExecutionListener;
 
@@ -31,10 +30,8 @@ import javax.sql.DataSource;
         },
         inheritListeners = false)
 @DbUnitConfiguration(databaseConnection = "dbUnitDatabaseConnection")
-@DataJpaTest
-@TestPropertySource("classpath:application-test.yaml")
-@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-public abstract class BaseDaoTest extends DbTestContext {
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+public abstract class DbUnitBaseTest extends DbTestContext {
 
     public static class EntityIdExclusionFilter implements IColumnFilter {
 
