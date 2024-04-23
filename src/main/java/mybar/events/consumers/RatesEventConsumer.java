@@ -34,7 +34,7 @@ public class RatesEventConsumer {
             containerFactory = "kafkaListenerContainerFactory",
             groupId = "mb-events"
     )
-    public void consume(@Header(KafkaHeaders.RECEIVED_MESSAGE_KEY) String key, @Payload RecordObject<RateDto> recordObject) {
+    public void consume(@Header(KafkaHeaders.RECEIVED_KEY) String key, @Payload RecordObject<RateDto> recordObject) {
         log.info("Received payload='{}'", recordObject);
         try {
             RateDto rateDto = recordObject.getValue();

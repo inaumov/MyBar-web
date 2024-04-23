@@ -1,10 +1,10 @@
 package mybar.repository.bar;
 
-import mybar.domain.bar.Bottle;
+import mybar.domain.bar.Menu;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface BottleDao extends JpaRepository<Bottle, String> {
+public interface MenuRepository extends JpaRepository<Menu, Integer> {
 
 }

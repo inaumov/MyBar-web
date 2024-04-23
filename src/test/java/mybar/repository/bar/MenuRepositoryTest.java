@@ -1,11 +1,9 @@
 package mybar.repository.bar;
 
 import com.github.springtestdbunit.annotation.DatabaseSetup;
-import com.github.springtestdbunit.annotation.ExpectedDatabase;
-import com.github.springtestdbunit.assertion.DatabaseAssertionMode;
 import mybar.domain.bar.Cocktail;
 import mybar.domain.bar.Menu;
-import mybar.repository.BaseDaoTest;
+import mybar.repository.DbUnitBaseTest;
 import org.assertj.core.api.Condition;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,29 +18,26 @@ import static org.assertj.core.api.Assertions.anyOf;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Basic Tests of Menu DAO.
- */
 @DatabaseSetup("classpath:datasets/dataset.xml")
-@ContextConfiguration(classes = {MenuDao.class, CocktailDao.class})
-public class MenuDaoTest extends BaseDaoTest {
+@ContextConfiguration(classes = {MenuRepository.class, CocktailsRepository.class})
+public class MenuRepositoryTest extends DbUnitBaseTest {
 
     @Autowired
-    private MenuDao menuDao;
+    private MenuRepository menuRepository;
     @Autowired
-    private CocktailDao cocktailDao;
+    private CocktailsRepository cocktailsRepository;
 
     @Test
-    @ExpectedDatabase(value = "classpath:datasets/dataset.xml", assertionMode = DatabaseAssertionMode.NON_STRICT_UNORDERED)
+    @Order(Integer.MIN_VALUE)
     public void testPreconditions() {
-        // do nothing, just load and check dataSet and context loads
-        assertThat(menuDao).isNotNull();
-        assertThat(cocktailDao).isNotNull();
+        // do nothing, just check context loads
+        assertThat(menuRepository).isNotNull();
+        assertThat(cocktailsRepository).isNotNull();
     }
 
     @Test
     public void testSelectAllMenus() {
-        List<Menu> list = menuDao.findAll();
+        List<Menu> list = menuRepository.findAll();
         assertEquals(3, list.size());
         Iterator<Menu> it = list.iterator();
         assertMenu(it.next(), 1, "shot");
@@ -57,7 +52,7 @@ public class MenuDaoTest extends BaseDaoTest {
 
     @Test
     public void testMenuHasCocktails() {
-        List<Menu> menuList = menuDao.findAll();
+        List<Menu> menuList = menuRepository.findAll();
         Iterator<Menu> menuIterator = menuList.iterator();
 
         // test first menu
@@ -82,19 +77,19 @@ public class MenuDaoTest extends BaseDaoTest {
 
     @Test
     public void testAddCocktailToMenu() {
-        List<Menu> menuList = menuDao.findAll();
+        List<Menu> menuList = menuRepository.findAll();
 
         Cocktail cocktail = new Cocktail();
         cocktail.setName("New Cocktail");
         Iterator<Menu> it = menuList.iterator();
         Menu firstMenu = it.next();
         cocktail.setMenuId(firstMenu.getId());
-        cocktailDao.save(cocktail);
+        cocktailsRepository.save(cocktail);
 
-        menuList = menuDao.findAll();
+        menuList = menuRepository.findAll();
         it = menuList.iterator();
         it.next();
-        Collection<Cocktail> cocktails = cocktailDao.findByMenuId(firstMenu.getId());
+        Collection<Cocktail> cocktails = cocktailsRepository.findByMenuId(firstMenu.getId());
 
         // test first menu
         assertEquals(5, cocktails.size(), MessageFormat.format("Number of cocktails in the first [{0}] menu should be same.", firstMenu.getName()));

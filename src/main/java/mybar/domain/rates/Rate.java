@@ -5,7 +5,7 @@ import lombok.Setter;
 import mybar.domain.bar.Cocktail;
 import mybar.domain.users.User;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Getter

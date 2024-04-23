@@ -7,13 +7,13 @@ import mybar.api.bar.ingredient.IDrink;
 import mybar.api.bar.ingredient.IIngredient;
 import mybar.domain.bar.ingredient.Ingredient;
 import mybar.dto.DtoFactory;
-import mybar.repository.bar.IngredientDao;
+import mybar.repository.bar.IngredientRepository;
 import mybar.utils.Preconditions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -34,13 +34,13 @@ public class IngredientService {
             IAdditive.GROUP_NAME
     ));
 
-    private final IngredientDao ingredientDao;
+    private final IngredientRepository ingredientRepository;
 
     private Supplier<List<IIngredient>> allIngredientsCached;
 
     @Autowired
-    public IngredientService(IngredientDao ingredientDao) {
-        this.ingredientDao = ingredientDao;
+    public IngredientService(IngredientRepository ingredientRepository) {
+        this.ingredientRepository = ingredientRepository;
     }
 
     @PostConstruct
@@ -64,7 +64,7 @@ public class IngredientService {
 
     private List<IIngredient> loadByGroupName(String groupName) throws IllegalArgumentException {
         try {
-            List<Ingredient> ingredients = ingredientDao.findByGroupName(groupName);
+            List<Ingredient> ingredients = ingredientRepository.findByGroupName(groupName);
             return ingredients
                     .stream()
                     .map(IngredientService::toDto)
@@ -79,7 +79,7 @@ public class IngredientService {
     }
 
     private List<IIngredient> loadAllIngredients() {
-        List<Ingredient> ingredients = ingredientDao.findAll();
+        List<Ingredient> ingredients = ingredientRepository.findAll();
         return ingredients
                 .stream()
                 .map(IngredientService::toDto)

@@ -15,12 +15,6 @@ VALUES ('test', '$2a$10$qb5rqI6oFyDmXZ1klN3XkOCn3EY0izoAgErQrh99yYjOmgMkNN8GS', 
 INSERT INTO users (USERNAME, PASSWORD, NAME, SURNAME, EMAIL, ACTIVE)
 VALUES ('pvl_zbrv', null, 'Pavlo', 'Zibrov', 'pavluxa@gmail.com', '1');
 
-INSERT INTO roles (ROLE_NAME, DESCRIPTION) VALUES ('ROLE_SUPER', 'Full-powered administrator. Audit. View reports.');
-INSERT INTO roles (ROLE_NAME, DESCRIPTION) VALUES ('ROLE_ADMIN', 'User administrator role.');
-INSERT INTO roles (ROLE_NAME, DESCRIPTION) VALUES ('ROLE_USER', 'Regular user role. Create/manage individual cocktails. Manage personal shelf.');
-
-INSERT INTO user_has_roles (USERNAME, ROLE_NAME) VALUES ('super', 'ROLE_SUPER');
-INSERT INTO user_has_roles (USERNAME, ROLE_NAME) VALUES ('admin', 'ROLE_ADMIN');
 INSERT INTO user_has_roles (USERNAME, ROLE_NAME) VALUES ('inactive', 'ROLE_USER');
 INSERT INTO user_has_roles (USERNAME, ROLE_NAME) VALUES ('JohnDoe', 'ROLE_SUPER');
 INSERT INTO user_has_roles (USERNAME, ROLE_NAME) VALUES ('JohnDoe', 'ROLE_USER');

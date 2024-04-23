@@ -4,8 +4,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import mybar.api.bar.ingredient.BeverageType;
 import mybar.api.bar.IBottle;
+import mybar.api.bar.ingredient.BeverageType;
 import mybar.app.RestBeanConverter;
 import mybar.app.bean.bar.BottleBean;
 import mybar.app.bean.bar.ingredient.BeverageBean;
@@ -15,14 +15,17 @@ import mybar.exception.BottleNotFoundException;
 import mybar.exception.UnknownBeverageException;
 import mybar.service.bar.ShelfService;
 import mybar.web.rest.ARestControllerTest;
-import org.junit.jupiter.api.Test;
+import mybar.web.rest.bar.exception.BarRestExceptionProcessor;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
@@ -36,6 +39,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(ShelfController.class)
+@ContextConfiguration(
+        classes = {
+                ShelfController.class,
+                BarRestExceptionProcessor.class
+        }
+)
 public class ShelfRestControllerTest extends ARestControllerTest {
     public static final String basePath = "/v1/shelf";
 
@@ -70,21 +79,16 @@ public class ShelfRestControllerTest extends ARestControllerTest {
     }
 
     @AfterEach
-    public void tearDown() throws Exception {
+    public void tearDown() {
         reset(shelfServiceMock);
     }
 
     @Test
     public void test_findAll_notAuthorized() throws Exception {
-        String accessToken = "not_a_real_token";
 
         when(shelfServiceMock.findById(Mockito.anyString())).thenReturn(Mockito.mock(IBottle.class));
 
-        mockMvc.perform(get("/v1/ingredients")
-                .header("Authorization", "Bearer " + accessToken)
-                .accept(MediaType.APPLICATION_JSON))
-
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        mockMvc.perform(get(basePath + "/bottles"))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -93,9 +97,7 @@ public class ShelfRestControllerTest extends ARestControllerTest {
 
         when(shelfServiceMock.findById(Mockito.anyString())).thenReturn(Mockito.mock(IBottle.class));
 
-        mockMvc.perform(makePreAuthorizedRequest(ADMIN, ADMIN, get("/ingredients")))
-
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        mockMvc.perform(asAdmin(get(basePath + "/bottles")))
                 .andExpect(status().isForbidden());
     }
 
@@ -113,7 +115,7 @@ public class ShelfRestControllerTest extends ARestControllerTest {
 
         when(shelfServiceMock.findById(TEST_ID_1)).thenReturn(first);
 
-        mockMvc.perform(makePreAuthorizedRequest(USER, USER, get(basePath + "/bottles/{0}", TEST_ID_1)))
+        mockMvc.perform(asUser(get(basePath + "/bottles/{0}", TEST_ID_1)))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -133,11 +135,11 @@ public class ShelfRestControllerTest extends ARestControllerTest {
     public void findById_Should_ThrowNotFound() throws Exception {
         when(shelfServiceMock.findById(TEST_ID_2)).thenThrow(new BottleNotFoundException(TEST_ID_2));
 
-        mockMvc.perform(makePreAuthorizedRequest(USER, USER, get(basePath + "/bottles/{0}", TEST_ID_2)))
+        mockMvc.perform(asUser(get(basePath + "/bottles/{0}", TEST_ID_2)))
                 .andDo(print())
                 .andExpect(status().isNotFound())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(content().string(containsString("errorMessage\":\"There is no bottle with id: " + TEST_ID_2)));
+                .andExpect(jsonPath("errorMessage", equalTo("There is no bottle with id: " + TEST_ID_2)));
 
         verify(shelfServiceMock, times(1)).findById(anyString());
         verifyNoMoreInteractions(shelfServiceMock);
@@ -148,7 +150,7 @@ public class ShelfRestControllerTest extends ARestControllerTest {
 
         when(shelfServiceMock.findAllBottles()).thenReturn(Collections.<IBottle>emptyList());
 
-        mockMvc.perform(makePreAuthorizedRequest(USER, USER, get(basePath + "/bottles")))
+        mockMvc.perform(asUser(get(basePath + "/bottles")))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -180,7 +182,7 @@ public class ShelfRestControllerTest extends ARestControllerTest {
 
         when(shelfServiceMock.findAllBottles()).thenReturn(Arrays.<IBottle>asList(first, second));
 
-        mockMvc.perform(makePreAuthorizedRequest(USER, USER, get(basePath + "/bottles")))
+        mockMvc.perform(asUser(get(basePath + "/bottles")))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -222,7 +224,7 @@ public class ShelfRestControllerTest extends ARestControllerTest {
 
         when(shelfServiceMock.findAllBottles()).thenReturn(Arrays.<IBottle>asList(first, second));
 
-        mockMvc.perform(makePreAuthorizedRequest(USER, USER, get(basePath + "/bottles")))
+        mockMvc.perform(asUser(get(basePath + "/bottles")))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -247,7 +249,7 @@ public class ShelfRestControllerTest extends ARestControllerTest {
 
         when(shelfServiceMock.saveBottle(Mockito.any(IBottle.class))).thenReturn(prepareBottleDto);
 
-        mockMvc.perform(makePreAuthorizedRequest(USER, USER, post(basePath + "/bottles", requestJson))
+        mockMvc.perform(asUser(post(basePath + "/bottles", requestJson))
                 .content(requestJson))
 
                 .andDo(print())
@@ -274,13 +276,13 @@ public class ShelfRestControllerTest extends ARestControllerTest {
         beverage.setId(102);
         when(shelfServiceMock.saveBottle(Mockito.any(IBottle.class))).thenThrow(new UnknownBeverageException(beverage));
 
-        mockMvc.perform(makePreAuthorizedRequest(USER, USER, post(basePath + "/bottles"))
+        mockMvc.perform(asUser(post(basePath + "/bottles"))
                 .content("{}"))
 
                 .andDo(print())
                 .andExpect(status().isBadRequest())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(content().string(containsString("errorMessage\":\"Beverage [102] is unknown.")));
+                .andExpect(jsonPath("errorMessage", equalTo("Beverage [102] is unknown.")));
 
         verify(shelfServiceMock, times(1)).saveBottle(Mockito.any(IBottle.class));
         verifyNoMoreInteractions(shelfServiceMock);
@@ -291,13 +293,13 @@ public class ShelfRestControllerTest extends ARestControllerTest {
 
         when(shelfServiceMock.saveBottle(Mockito.any(IBottle.class))).thenCallRealMethod();
 
-        mockMvc.perform(makePreAuthorizedRequest(USER, USER, post(basePath + "/bottles"))
+        mockMvc.perform(asUser(post(basePath + "/bottles"))
                 .content("{\"ingredient\":{\"id\":6}}"))
 
                 .andDo(print())
                 .andExpect(status().isBadRequest())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(content().string(containsString("errorMessage\":\"Brand name is required.")));
+                .andExpect(jsonPath("errorMessage", equalTo("Brand name is required.")));
 
         verify(shelfServiceMock, times(1)).saveBottle(Mockito.any(IBottle.class));
         verifyNoMoreInteractions(shelfServiceMock);
@@ -308,13 +310,13 @@ public class ShelfRestControllerTest extends ARestControllerTest {
 
         when(shelfServiceMock.saveBottle(Mockito.any(IBottle.class))).thenCallRealMethod();
 
-        mockMvc.perform(makePreAuthorizedRequest(USER, USER, post(basePath + "/bottles"))
+        mockMvc.perform(asUser(post(basePath + "/bottles"))
                 .content("{\"brandName\":\"test\"}"))
 
                 .andDo(print())
                 .andExpect(status().isBadRequest())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(content().string(containsString("errorMessage\":\"Beverage ID is required.")));
+                .andExpect(jsonPath("errorMessage", equalTo("Beverage ID is required.")));
 
         verify(shelfServiceMock, times(1)).saveBottle(Mockito.any(IBottle.class));
         verifyNoMoreInteractions(shelfServiceMock);
@@ -328,7 +330,7 @@ public class ShelfRestControllerTest extends ARestControllerTest {
 
         String requestJson = toRequestJson(RestBeanConverter.from(bottleDto));
 
-        mockMvc.perform(makePreAuthorizedRequest(USER, USER, put(basePath + "/bottles/", requestJson))
+        mockMvc.perform(asUser(put(basePath + "/bottles", requestJson))
                 .content(requestJson))
 
                 .andDo(print())
@@ -373,13 +375,13 @@ public class ShelfRestControllerTest extends ARestControllerTest {
 
         String requestJson = toRequestJson(testBottle);
 
-        mockMvc.perform(makePreAuthorizedRequest(USER, USER, put(basePath + "/bottles/", requestJson))
+        mockMvc.perform(asUser(put(basePath + "/bottles", requestJson))
                 .content(requestJson))
 
                 .andDo(print())
                 .andExpect(status().isNotFound())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(content().string(containsString("errorMessage\":\"There is no bottle with id: " + TEST_ID_2)));
+                .andExpect(jsonPath("errorMessage", equalTo("There is no bottle with id: " + TEST_ID_2)));
 
         verify(shelfServiceMock, times(1)).updateBottle(Mockito.any(IBottle.class));
         verifyNoMoreInteractions(shelfServiceMock);
@@ -392,13 +394,13 @@ public class ShelfRestControllerTest extends ARestControllerTest {
         beverageBean.setId(21);
         when(shelfServiceMock.updateBottle(Mockito.any(IBottle.class))).thenThrow(new UnknownBeverageException(beverageBean));
 
-        mockMvc.perform(makePreAuthorizedRequest(USER, USER, put(basePath + "/bottles"))
+        mockMvc.perform(asUser(put(basePath + "/bottles"))
                 .content("{}"))
 
                 .andDo(print())
                 .andExpect(status().isBadRequest())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(content().string(containsString("errorMessage\":\"Beverage [21] is unknown.")));
+                .andExpect(jsonPath("errorMessage", equalTo("Beverage [21] is unknown.")));
 
         verify(shelfServiceMock, times(1)).updateBottle(Mockito.any(IBottle.class));
         verifyNoMoreInteractions(shelfServiceMock);
@@ -409,13 +411,13 @@ public class ShelfRestControllerTest extends ARestControllerTest {
 
         when(shelfServiceMock.updateBottle(Mockito.any(IBottle.class))).thenCallRealMethod();
 
-        mockMvc.perform(makePreAuthorizedRequest(USER, USER, put(basePath + "/bottles"))
+        mockMvc.perform(asUser(put(basePath + "/bottles"))
                 .content("{\"id\":\"bottle-test00\",\"ingredient\":{\"id\":21}}"))
 
                 .andDo(print())
                 .andExpect(status().isBadRequest())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(content().string(containsString("errorMessage\":\"Brand name is required")));
+                .andExpect(jsonPath("errorMessage", equalTo("Brand name is required.")));
 
         verify(shelfServiceMock, times(1)).updateBottle(Mockito.any(IBottle.class));
         verifyNoMoreInteractions(shelfServiceMock);
@@ -426,13 +428,13 @@ public class ShelfRestControllerTest extends ARestControllerTest {
 
         when(shelfServiceMock.updateBottle(Mockito.any(IBottle.class))).thenCallRealMethod();
 
-        mockMvc.perform(makePreAuthorizedRequest(USER, USER, put(basePath + "/bottles"))
+        mockMvc.perform(asUser(put(basePath + "/bottles"))
                 .content("{\"id\":\"bottle-test00\",\"brandName\":\"test\"}"))
 
                 .andDo(print())
                 .andExpect(status().isBadRequest())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(content().string(containsString("errorMessage\":\"Beverage ID is required.")));
+                .andExpect(jsonPath("errorMessage", equalTo("Beverage ID is required.")));
 
         verify(shelfServiceMock, times(1)).updateBottle(Mockito.any(IBottle.class));
         verifyNoMoreInteractions(shelfServiceMock);
@@ -443,7 +445,7 @@ public class ShelfRestControllerTest extends ARestControllerTest {
 
         doNothing().when(shelfServiceMock).deleteBottleById(TEST_ID_1);
 
-        mockMvc.perform(makePreAuthorizedRequest(USER, USER, delete(basePath + "/bottles/" + TEST_ID_1)))
+        mockMvc.perform(asUser(delete(basePath + "/bottles/" + TEST_ID_1)))
 
                 .andDo(print())
                 .andExpect(status().isNoContent());
@@ -457,11 +459,11 @@ public class ShelfRestControllerTest extends ARestControllerTest {
 
         doThrow(new BottleNotFoundException(TEST_ID_2)).when(shelfServiceMock).deleteBottleById(TEST_ID_2);
 
-        mockMvc.perform(makePreAuthorizedRequest(USER, USER, delete(basePath + "/bottles/" + TEST_ID_2)))
+        mockMvc.perform(asUser(delete(basePath + "/bottles/" + TEST_ID_2)))
                 .andDo(print())
                 .andExpect(status().isNotFound())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(content().string(containsString("errorMessage\":\"There is no bottle with id: " + TEST_ID_2)));
+                .andExpect(jsonPath("errorMessage", equalTo("There is no bottle with id: " + TEST_ID_2)));
 
         verify(shelfServiceMock, times(1)).deleteBottleById(TEST_ID_2);
         verifyNoMoreInteractions(shelfServiceMock);

@@ -5,9 +5,9 @@ import mybar.domain.bar.Cocktail;
 import mybar.domain.rates.Rate;
 import mybar.domain.users.User;
 import mybar.dto.RateDto;
-import mybar.repository.bar.CocktailDao;
-import mybar.repository.rates.RatesDao;
-import mybar.repository.users.UserDao;
+import mybar.repository.bar.CocktailsRepository;
+import mybar.repository.rates.RatesRepository;
+import mybar.repository.users.UserRepository;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,11 +29,11 @@ public class RatesServiceTest {
     public static final String COCKTAIL_ID = "cocktail-000099";
 
     @Mock
-    private UserDao userDaoMock;
+    private UserRepository userRepositoryMock;
     @Mock
-    private RatesDao ratesDaoMock;
+    private RatesRepository ratesRepositoryMock;
     @Mock
-    private CocktailDao cocktailDaoMock;
+    private CocktailsRepository cocktailsRepositoryMock;
 
     @InjectMocks
     private RatesService ratesService;
@@ -53,13 +53,13 @@ public class RatesServiceTest {
         rate.setUser(user);
         rate.setCocktail(cocktail);
 
-        Mockito.when(ratesDaoMock.findBy(USERNAME, COCKTAIL_ID)).thenReturn(rate);
+        Mockito.when(ratesRepositoryMock.findBy(USERNAME, COCKTAIL_ID)).thenReturn(rate);
         ratesService.removeCocktailFromRates(USERNAME, COCKTAIL_ID);
     }
 
     @Test
     public void test_get_my_rated_cocktails() {
-        Mockito.when(userDaoMock.getOne(Mockito.anyString())).thenReturn(new User());
+        Mockito.when(userRepositoryMock.getReferenceById(Mockito.anyString())).thenReturn(new User());
 
         User user = new User();
         user.setUsername(USERNAME);
@@ -71,7 +71,7 @@ public class RatesServiceTest {
         rate.setCocktail(cocktail);
         rate.setRatedAt(LocalDateTime.now());
 
-        Mockito.when(ratesDaoMock.findAllRatesForUser(Mockito.any(User.class))).thenReturn(Collections.singletonList(rate));
+        Mockito.when(ratesRepositoryMock.findAllRatesForUser(Mockito.any(User.class))).thenReturn(Collections.singletonList(rate));
         Collection<IRate> ratedCocktails = ratesService.getRatedCocktails(USERNAME);
 
         Assertions.assertEquals(ratedCocktails.size(), 1);
@@ -79,8 +79,8 @@ public class RatesServiceTest {
 
     @Test
     public void test_persist_rate() {
-        Mockito.when(userDaoMock.getOne(Mockito.anyString())).thenReturn(new User());
-        Mockito.when(cocktailDaoMock.findById(COCKTAIL_ID)).thenReturn(Optional.of(new Cocktail()));
+        Mockito.when(userRepositoryMock.getReferenceById(Mockito.anyString())).thenReturn(new User());
+        Mockito.when(cocktailsRepositoryMock.findById(COCKTAIL_ID)).thenReturn(Optional.of(new Cocktail()));
 
         RateDto rateDto = new RateDto();
         rateDto.setCocktailId(COCKTAIL_ID);
@@ -89,7 +89,7 @@ public class RatesServiceTest {
 
         ratesService.persistRate(USERNAME, rateDto);
         // persist only when cocktail exists
-        Mockito.verify(ratesDaoMock, Mockito.atLeastOnce()).save(Mockito.any(Rate.class));
+        Mockito.verify(ratesRepositoryMock, Mockito.atLeastOnce()).save(Mockito.any(Rate.class));
     }
 
 }

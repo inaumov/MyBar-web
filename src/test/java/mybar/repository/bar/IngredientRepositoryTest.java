@@ -1,15 +1,12 @@
 package mybar.repository.bar;
 
 import com.github.springtestdbunit.annotation.DatabaseSetup;
-import com.github.springtestdbunit.annotation.ExpectedDatabase;
-import com.github.springtestdbunit.assertion.DatabaseAssertionMode;
-import lombok.SneakyThrows;
 import mybar.api.bar.ingredient.BeverageType;
 import mybar.api.bar.ingredient.IBeverage;
 import mybar.domain.bar.Bottle;
 import mybar.domain.bar.ingredient.Beverage;
 import mybar.domain.bar.ingredient.Ingredient;
-import mybar.repository.BaseDaoTest;
+import mybar.repository.DbUnitBaseTest;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
@@ -21,12 +18,9 @@ import java.util.stream.IntStream;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Tests Ingredient DAO.
- */
 @DatabaseSetup("classpath:datasets/dataset.xml")
-@ContextConfiguration(classes = IngredientDao.class)
-public class IngredientDaoTest extends BaseDaoTest {
+@ContextConfiguration(classes = IngredientRepository.class)
+public class IngredientRepositoryTest extends DbUnitBaseTest {
 
     private static final Integer THIRD_ITEM = 3;
     private static final Integer LAST_ITEM = 16;
@@ -61,21 +55,21 @@ public class IngredientDaoTest extends BaseDaoTest {
     };
 
     @Autowired
-    private IngredientDao ingredientDao;
+    private IngredientRepository ingredientRepository;
 
     @Test
-    @ExpectedDatabase(value = "classpath:datasets/dataset.xml", assertionMode = DatabaseAssertionMode.NON_STRICT_UNORDERED)
+    @Order(Integer.MIN_VALUE)
     public void testPreconditions() {
-        // do nothing, just load and check dataSet and context loads
-        assertThat(ingredientDao).isNotNull();
+        // do nothing, just check context loads
+        assertThat(ingredientRepository).isNotNull();
     }
 
     @Test
     public void testFindAllOrdered() {
 
-        List<Ingredient> all = ingredientDao.findAll();
+        List<Ingredient> all = ingredientRepository.findAll();
         // Number of ingredients should be 18.
-        org.assertj.core.api.Assertions.assertThat(all)
+        assertThat(all)
                 .withFailMessage("Number of ingredients should be 18.")
                 .hasSize(18);
 
@@ -92,7 +86,7 @@ public class IngredientDaoTest extends BaseDaoTest {
     @Test
     public void testFindByIds_When_AllExists() {
 
-        List<Ingredient> all = ingredientDao.findIn(List.of(1, 18, 17));
+        List<Ingredient> all = ingredientRepository.findIn(List.of(1, 18, 17));
 
         assertEquals(3, all.size());
         assertEquals("Vodka", all.get(0).getKind());
@@ -105,18 +99,17 @@ public class IngredientDaoTest extends BaseDaoTest {
         List<Integer> ids = IntStream.rangeClosed(17, 25)
                 .boxed()
                 .toList();
-        List<Ingredient> all = ingredientDao.findIn(ids);
+        List<Ingredient> all = ingredientRepository.findIn(ids);
 
         assertEquals(all.size(), 2);
         assertEquals("Coca Cola", all.get(0).getKind());
         assertEquals("Lime", all.get(1).getKind());
     }
 
-    @SneakyThrows
     @Test
     public void testFindBeverages() {
 
-        List<Ingredient> beverages = ingredientDao.findByGroupName(IBeverage.GROUP_NAME);
+        List<Ingredient> beverages = ingredientRepository.findByGroupName(IBeverage.GROUP_NAME);
 
         assertNotNull(beverages, "Ingredient list is null.");
         assertEquals(EXPECTED_BEVERAGES_NMB, beverages.size());
@@ -130,7 +123,7 @@ public class IngredientDaoTest extends BaseDaoTest {
         Beverage beverage = (Beverage) thirdIngredient.get();
         List<Bottle> bottles = beverage.getBottles();
         assertNotNull(bottles);
-        org.assertj.core.api.Assertions.assertThat(bottles)
+        assertThat(bottles)
                 .withFailMessage("Number of bottles assigned to ingredient should be same.")
                 .hasSize(2);
         assertBottle(BACARDI_BOTTLE_ID, "Bacardi", true, bottles.get(0));
@@ -145,7 +138,7 @@ public class IngredientDaoTest extends BaseDaoTest {
     }
 
     private void assertIngredient(Ingredient ingredient, Integer item, String expected) {
-        assertTrue(ingredient instanceof Beverage, "Ingredient should be an instance of Beverage.");
+        assertInstanceOf(Beverage.class, ingredient, "Ingredient should be an instance of Beverage.");
         Beverage beverage = (Beverage) ingredient;
         assertEquals(item, beverage.getId());
         assertEquals(expected, beverage.getKind(), "Ingredient kind name should be same.");
@@ -162,14 +155,14 @@ public class IngredientDaoTest extends BaseDaoTest {
 
     @Test
     public void testFindBeverageById() {
-        Beverage beverageById = ingredientDao.findBeverageById(5);
+        Beverage beverageById = ingredientRepository.findBeverageById(5);
         assertNotNull(beverageById);
         assertEquals("Bourbon", beverageById.getKind());
     }
 
     @Test
     public void testFindBeverageById_when_is_not_this_type() {
-        assertNull(ingredientDao.findBeverageById(18));
+        assertNull(ingredientRepository.findBeverageById(18));
     }
 
 }

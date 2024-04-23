@@ -4,8 +4,6 @@ import lombok.extern.slf4j.Slf4j;
 import mybar.events.common.api.IEventProducer;
 import mybar.events.common.api.RecordObject;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.kafka.support.SendResult;
-import org.springframework.util.concurrent.ListenableFutureCallback;
 
 import java.time.Instant;
 
@@ -22,24 +20,21 @@ public class MyBarEventProducer<T> implements IEventProducer<T> {
         long time = System.currentTimeMillis();
         String key = asKey(userId, entityId);
         var recordObject = RecordObject.of(time, dto);
-        var send = kafkaTemplate.send(topicName, 0, time, key, recordObject);
-        send.addCallback(new ListenableFutureCallback<>() {
-            @Override
-            public void onSuccess(SendResult<String, RecordObject<?>> result) {
-                var record = result.getProducerRecord();
-                var metadata = result.getRecordMetadata();
-                var timestamp = metadata.timestamp();
-                long elapsedTime = timestamp - time;
-                log.info("Event sent: record(key={}, value={}) meta(partition={}, offset={}) elapsed time={}.",
-                        record.key(), record.value(), metadata.partition(),
-                        metadata.offset(), elapsedTime);
-            }
 
-            @Override
-            public void onFailure(Throwable throwable) {
-                log.error("Unable to send an event record for the key: {} due to : {}", key, throwable.getMessage());
-            }
-        });
+        kafkaTemplate.send(topicName, 0, time, key, recordObject)
+                .whenComplete((result, ex) -> {
+                    if (ex != null) {
+                        log.error("Unable to send an event record for the key: {} due to : {}", key, ex.getMessage());
+                    } else {
+                        var producerRecord = result.getProducerRecord();
+                        var metadata = result.getRecordMetadata();
+                        var timestamp = metadata.timestamp();
+                        long elapsedTime = timestamp - time;
+                        log.info("Event sent: record(key={}, value={}) meta(partition={}, offset={}) elapsed time={}.",
+                                producerRecord.key(), producerRecord.value(), metadata.partition(),
+                                metadata.offset(), elapsedTime);
+                    }
+                });
         return Instant.ofEpochMilli(time);
     }
 

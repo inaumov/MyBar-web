@@ -1,29 +1,35 @@
 package mybar.app.bean;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
+
+import java.util.List;
+
+@Getter
+@Setter
 public class ErrorInfo {
 
     private String url;
     private String errorMessage;
+    private String code;
+    private List<ErrorField> errors;
 
     public ErrorInfo(String url, String errorMessage) {
         this.url = url;
         this.errorMessage = errorMessage;
     }
 
-    public String getUrl() {
-        return url;
+    public ErrorInfo(String url, String errorMessage, String code) {
+        this(url, errorMessage);
+        this.code = code;
     }
 
-    public void setUrl(String url) {
-        this.url = url;
-    }
-
-    public String getErrorMessage() {
-        return errorMessage;
-    }
-
-    public void setErrorMessage(String errorMessage) {
-        this.errorMessage = errorMessage;
+    @Getter
+    @AllArgsConstructor
+    public static class ErrorField {
+        private String field;
+        private String errorMessage;
     }
 
 }

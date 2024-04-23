@@ -8,18 +8,20 @@ import mybar.exception.users.UserExistsException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.text.MessageFormat;
 import java.util.Locale;
 
 @Slf4j
-@ControllerAdvice(basePackages = "mybar.web.rest.users")
+@RestControllerAdvice(basePackages = "mybar.web.rest.users")
+@Order(Ordered.HIGHEST_PRECEDENCE)
 public class UsersRestExceptionProcessor {
 
     private final MessageSource messageSource;
@@ -31,7 +33,6 @@ public class UsersRestExceptionProcessor {
 
     @ExceptionHandler(EmailDuplicatedException.class)
     @ResponseStatus(value = HttpStatus.FORBIDDEN)
-    @ResponseBody
     public ErrorInfo duplicatedEmail(HttpServletRequest req, EmailDuplicatedException ex) {
         log.warn("Duplicated email thrown:", ex);
 
@@ -45,7 +46,6 @@ public class UsersRestExceptionProcessor {
 
     @ExceptionHandler(UserExistsException.class)
     @ResponseStatus(value = HttpStatus.FORBIDDEN)
-    @ResponseBody
     public ErrorInfo userExists(HttpServletRequest req, UserExistsException ex) {
         log.warn("User exists thrown:", ex);
 
@@ -59,7 +59,6 @@ public class UsersRestExceptionProcessor {
 
     @ExceptionHandler(UnknownUserException.class)
     @ResponseStatus(value = HttpStatus.NOT_FOUND)
-    @ResponseBody
     public ErrorInfo userUnknown(HttpServletRequest req, UnknownUserException ex) {
         log.warn("User unknown thrown:", ex);
 
@@ -73,7 +72,6 @@ public class UsersRestExceptionProcessor {
 
     @ExceptionHandler(PasswordConfirmationException.class)
     @ResponseStatus(value = HttpStatus.BAD_REQUEST)
-    @ResponseBody
     public ErrorInfo pwdConfirmation(HttpServletRequest req, PasswordConfirmationException ex) {
         log.warn("Password confirmation thrown:", ex);
 
@@ -86,7 +84,6 @@ public class UsersRestExceptionProcessor {
 
     @ExceptionHandler(InvalidPasswordException.class)
     @ResponseStatus(value = HttpStatus.BAD_REQUEST)
-    @ResponseBody
     public ErrorInfo pwdCheck(HttpServletRequest req, InvalidPasswordException ex) {
         log.warn("Password check thrown:", ex);
 

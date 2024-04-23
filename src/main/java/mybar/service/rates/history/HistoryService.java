@@ -1,7 +1,7 @@
 package mybar.service.rates.history;
 
 import mybar.domain.History;
-import mybar.repository.rates.RatesDao;
+import mybar.repository.rates.RatesRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -12,11 +12,11 @@ import java.util.List;
 @Service
 public class HistoryService {
 
-    private final RatesDao ratesDao;
+    private final RatesRepository ratesRepository;
 
     @Autowired
-    public HistoryService(RatesDao ratesDao) {
-        this.ratesDao = ratesDao;
+    public HistoryService(RatesRepository ratesRepository) {
+        this.ratesRepository = ratesRepository;
     }
 
     public List<History> getHistoryForPeriod(LocalDate startDate, LocalDate endDate) {
@@ -24,7 +24,7 @@ public class HistoryService {
         startDate = startDate != null ? startDate : Year.parse("2008").atDay(1);
         endDate = endDate != null ? endDate : LocalDate.now();
 
-        return ratesDao.getRatedCocktailsForPeriod(startDate.atStartOfDay(), endDate.plusDays(1).atStartOfDay());
+        return ratesRepository.getRatedCocktailsForPeriod(startDate.atStartOfDay(), endDate.plusDays(1).atStartOfDay());
     }
 
 }

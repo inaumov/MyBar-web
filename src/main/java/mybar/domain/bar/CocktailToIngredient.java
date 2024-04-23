@@ -7,10 +7,10 @@ import mybar.domain.bar.ingredient.Beverage;
 import mybar.domain.bar.ingredient.Drink;
 import mybar.domain.bar.ingredient.Ingredient;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 @Entity
-@Table(name = "cocktail_to_ingredient")
+@Table(name = "cocktails_to_ingredients")
 @AssociationOverrides({
         @AssociationOverride(name = "pk.cocktail", joinColumns = @JoinColumn(name = "cocktail_id")),
         @AssociationOverride(name = "pk.ingredient", joinColumns = @JoinColumn(name = "ingredient_id"))

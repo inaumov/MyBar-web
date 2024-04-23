@@ -7,15 +7,15 @@ import mybar.domain.rates.Rate;
 import mybar.domain.users.User;
 import mybar.dto.RateDto;
 import mybar.exception.CocktailNotFoundException;
-import mybar.repository.bar.CocktailDao;
-import mybar.repository.rates.RatesDao;
-import mybar.repository.users.UserDao;
+import mybar.repository.bar.CocktailsRepository;
+import mybar.repository.rates.RatesRepository;
+import mybar.repository.users.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.persistence.Tuple;
+import jakarta.persistence.Tuple;
 import java.math.BigDecimal;
 import java.time.ZoneId;
 import java.util.*;
@@ -25,28 +25,28 @@ import java.util.stream.Collectors;
 @Service
 public class RatesService {
 
-    private final RatesDao ratesDao;
+    private final RatesRepository ratesRepository;
 
-    private final UserDao userDao;
+    private final UserRepository userRepository;
 
-    private final CocktailDao cocktailDao;
+    private final CocktailsRepository cocktailsRepository;
 
     @Autowired
-    public RatesService(RatesDao ratesDao, UserDao userDao, CocktailDao cocktailDao) {
-        this.ratesDao = ratesDao;
-        this.userDao = userDao;
-        this.cocktailDao = cocktailDao;
+    public RatesService(RatesRepository ratesRepository, UserRepository userRepository, CocktailsRepository cocktailsRepository) {
+        this.ratesRepository = ratesRepository;
+        this.userRepository = userRepository;
+        this.cocktailsRepository = cocktailsRepository;
     }
 
     public void removeCocktailFromRates(String userId, String cocktailId) {
-        Rate rate = ratesDao.findBy(userId, cocktailId);
-        ratesDao.delete(rate);
+        Rate rate = ratesRepository.findBy(userId, cocktailId);
+        ratesRepository.delete(rate);
     }
 
     public Collection<IRate> getRatedCocktails(String userId) {
         List<IRate> userRates = new ArrayList<>();
-        User user = userDao.getOne(userId);
-        List<Rate> allRatesForUser = ratesDao.findAllRatesForUser(user);
+        User user = userRepository.getReferenceById(userId);
+        List<Rate> allRatesForUser = ratesRepository.findAllRatesForUser(user);
         for (Rate rateEntity : allRatesForUser) {
             RateDto rateDto = new RateDto();
             rateDto.setCocktailId(rateEntity.getCocktail().getId());
@@ -63,7 +63,7 @@ public class RatesService {
     @Transactional(propagation = Propagation.REQUIRED)
     public void persistRate(String userId, IRate iRate) {
 
-        Cocktail cocktail = cocktailDao.findById(iRate.getCocktailId())
+        Cocktail cocktail = cocktailsRepository.findById(iRate.getCocktailId())
                 .orElseThrow(() -> new CocktailNotFoundException(iRate.getCocktailId()));
 
         Rate rate = new Rate();
@@ -71,18 +71,18 @@ public class RatesService {
         rate.setStars(iRate.getStars());
 
         rate.setRatedAt(iRate.getRatedAt());
-        User user = userDao.getOne(userId);
+        User user = userRepository.getReferenceById(userId);
         rate.setUser(user);
-        ratesDao.save(rate);
+        ratesRepository.save(rate);
     }
 
     void checkCocktailExists(String cocktailId) {
-        cocktailDao.findById(cocktailId)
+        cocktailsRepository.findById(cocktailId)
                 .orElseThrow(() -> new CocktailNotFoundException(cocktailId));
     }
 
     public Map<String, BigDecimal> findAllAverageRates() {
-        List<Tuple> allAverageRates = ratesDao.findAllAverageRates();
+        List<Tuple> allAverageRates = ratesRepository.findAllAverageRates();
         return allAverageRates.stream()
                 .collect(Collectors.toMap(x -> x.get("cocktail_id", String.class), x -> BigDecimal.valueOf(x.get("avg_stars", Double.class))));
     }

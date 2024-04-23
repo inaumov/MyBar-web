@@ -7,14 +7,8 @@ import mybar.service.rates.RatesEventService;
 import mybar.service.rates.RatesService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.util.Collection;
@@ -36,13 +30,13 @@ public class RatesController {
         this.ratesEventService = ratesEventService;
     }
 
-    @RequestMapping(value = "/average", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping("/average")
     @ResponseStatus(HttpStatus.OK)
     public Map<String, BigDecimal> findAllAverageRates() {
         return ratesService.findAllAverageRates();
     }
 
-    @RequestMapping(method = RequestMethod.POST, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public RateBean rate(@RequestBody RateBean rateBean) {
         String principal = getPrincipalName();
@@ -50,7 +44,7 @@ public class RatesController {
         return new RateBean(rate);
     }
 
-    @RequestMapping(method = RequestMethod.PUT, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping
     @ResponseStatus(HttpStatus.OK)
     public RateBean update(@RequestBody RateBean rateBean) {
         String principal = getPrincipalName();
@@ -58,13 +52,13 @@ public class RatesController {
         return new RateBean(rate);
     }
 
-    @RequestMapping(method = RequestMethod.DELETE, value = "/{cocktailId}")
+    @DeleteMapping("/{cocktailId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void remove(@PathVariable String cocktailId) {
         ratesService.removeCocktailFromRates(getPrincipalName(), cocktailId);
     }
 
-    @RequestMapping(value = "/ratedCocktails", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping("/ratedCocktails")
     @ResponseStatus(HttpStatus.OK)
     public List<RateBean> getRates() {
         Collection<IRate> ratedCocktails = ratesService.getRatedCocktails(getPrincipalName());

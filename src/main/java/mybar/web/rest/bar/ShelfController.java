@@ -11,6 +11,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.json.MappingJacksonValue;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -31,7 +32,7 @@ public class ShelfController {
 
     //-------------------Retrieve All Bottles--------------------------------------------------------
 
-    @RequestMapping(value = "/bottles", method = RequestMethod.GET)
+    @GetMapping("/bottles")
     public ResponseEntity<MappingJacksonValue> listAllBottles() {
 
         List<IBottle> allBottles = shelfService.findAllBottles();
@@ -51,9 +52,9 @@ public class ShelfController {
 
     //-------------------Retrieve a Bottle--------------------------------------------------------
 
-    @RequestMapping(value = "/bottles/{id}", method = RequestMethod.GET)
+    @GetMapping("/bottles/{id}")
     public ResponseEntity<BottleBean> getBottle(@PathVariable("id") String id) {
-        log.info("Fetching a bottle with id " + id);
+        log.info("Fetching a bottle with id = {}", id);
 
         IBottle bottle = shelfService.findById(id);
         return new ResponseEntity<>(RestBeanConverter.from(bottle), HttpStatus.OK);
@@ -61,9 +62,9 @@ public class ShelfController {
 
     //-------------------Create a Bottle--------------------------------------------------------
 
-    @RequestMapping(value = "/bottles", method = RequestMethod.POST)
+    @PostMapping("/bottles")
     public ResponseEntity<BottleBean> createBottle(@RequestBody BottleBean bottleBean, UriComponentsBuilder ucBuilder) {
-        log.info("Creating a " + bottleBean);
+        log.info("Adding a new bottle = {}", bottleBean);
 
         IBottle saved = shelfService.saveBottle(bottleBean);
         HttpHeaders headers = new HttpHeaders();
@@ -73,9 +74,9 @@ public class ShelfController {
 
     //------------------- Update a Bottle --------------------------------------------------------
 
-    @RequestMapping(value = "/bottles", method = RequestMethod.PUT)
+    @PutMapping("/bottles")
     public ResponseEntity<BottleBean> updateBottle(@RequestBody BottleBean bottleBean) {
-        log.info("Updating a bottle " + bottleBean);
+        log.info("Updating a bottle = {}", bottleBean);
 
         final IBottle updated = shelfService.updateBottle(bottleBean);
         return new ResponseEntity<>(RestBeanConverter.from(updated), HttpStatus.ACCEPTED);
@@ -83,9 +84,9 @@ public class ShelfController {
 
     //------------------- Delete a Bottle --------------------------------------------------------
 
-    @RequestMapping(value = "/bottles/{id}", method = RequestMethod.DELETE)
+    @DeleteMapping("/bottles/{id}")
     public ResponseEntity<BottleBean> deleteBottle(@PathVariable("id") String id) {
-        log.info("Deleting a bottle with id " + id);
+        log.info("Deleting a bottle with id = {}", id);
 
         shelfService.deleteBottleById(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
@@ -93,7 +94,8 @@ public class ShelfController {
 
     //------------------- Delete All Bottles --------------------------------------------------------
 
-    @RequestMapping(value = "/bottles", method = RequestMethod.DELETE)
+    @DeleteMapping("/bottles")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<BottleBean> deleteAllBottles() {
         log.info("Deleting all bottles");
 

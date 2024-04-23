@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public final class CommonPaths implements InitializingBean {
-    public static final String API_PATH = "http://localhost:8089/api/bar/v1/";
+    public static final String API_PATH = "http://localhost:8080/api/bar/v1/";
 
     @Autowired
     private Environment env;

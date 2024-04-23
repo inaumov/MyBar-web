@@ -6,7 +6,7 @@ import mybar.api.bar.ingredient.BeverageType;
 import mybar.api.bar.ingredient.IBeverage;
 import mybar.domain.bar.Bottle;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.List;
 
 @Getter

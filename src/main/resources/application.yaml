@@ -1,9 +1,13 @@
 server:
   servlet:
     contextPath: /api/bar
-  port: 8089
+  port: 8080
   error:
     include-message: always
+
+logging:
+  level:
+    org.springframework.security: trace
 
 management:
   endpoints:
@@ -12,8 +16,17 @@ management:
         include: info, health, metrics
 
 spring:
+  mvc.pathmatch.matching-strategy: ANT_PATH_MATCHER
+  security:
+    oauth2:
+      authorizationserver:
+        issuer-url: http://localhost:8080
+        introspection-endpoint: /oauth2/token-info
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8080
   datasource:
-    url: jdbc:postgresql://${DATABASE_HOST:localhost}:${DATABASE_PORT:5433}/${DATABASE_NAME:my_bar}?schema=${DATABASE_SCHEMA:public}
+    url: jdbc:postgresql://${DATABASE_HOST:localhost}:${DATABASE_PORT:5432}/${DATABASE_NAME:my_bar}?schema=${DATABASE_SCHEMA:public}
     username: ${DATABASE_USERNAME:postgres}
     password: ${DATABASE_PASSWORD:postgres}
     driver-class-name: org.postgresql.Driver
@@ -26,7 +39,7 @@ spring:
         implicit-strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.PostgreSQL10Dialect
+        dialect: org.hibernate.dialect.PostgresPlusDialect
   flyway:
     fail-on-missing-locations: true
   kafka:
@@ -42,12 +55,6 @@ spring:
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
-
-logging:
-  level:
-    org:
-      springframework:
-        security: INFO
 
 my-bar:
   events:

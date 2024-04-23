@@ -1,4 +1,4 @@
-CREATE TABLE bottle
+CREATE TABLE bottles
 (
     id            VARCHAR(255) NOT NULL,
     brand_name    VARCHAR(255),
@@ -10,7 +10,7 @@ CREATE TABLE bottle
     PRIMARY KEY (id)
 );
 
-CREATE TABLE cocktail
+CREATE TABLE cocktails
 (
     id          VARCHAR(255) NOT NULL,
     description VARCHAR(255),
@@ -20,7 +20,7 @@ CREATE TABLE cocktail
     PRIMARY KEY (id)
 );
 
-CREATE TABLE cocktail_to_ingredient
+CREATE TABLE cocktails_to_ingredients
 (
     measurement   VARCHAR(255),
     volume        DOUBLE PRECISION,
@@ -29,7 +29,7 @@ CREATE TABLE cocktail_to_ingredient
     PRIMARY KEY (cocktail_id, ingredient_id)
 );
 
-CREATE TABLE ingredient
+CREATE TABLE ingredients
 (
     group_name VARCHAR(31) NOT NULL,
     id         INTEGER     NOT NULL,
@@ -45,22 +45,18 @@ CREATE TABLE menu
     PRIMARY KEY (id)
 );
 
-ALTER TABLE bottle
-    ADD CONSTRAINT fk_bottle_ingredient_id
-        FOREIGN KEY (ingredient_id)
-            REFERENCES ingredient (id);
+ALTER TABLE bottles
+    ADD FOREIGN KEY (ingredient_id)
+        REFERENCES ingredients (id);
 
-ALTER TABLE cocktail
-    ADD CONSTRAINT fk_cocktail_menu_id
-        FOREIGN KEY (menu_id)
-            REFERENCES menu (id);
+ALTER TABLE cocktails
+    ADD FOREIGN KEY (menu_id)
+        REFERENCES menu (id);
 
-ALTER TABLE cocktail_to_ingredient
-    ADD CONSTRAINT fk_cocktail_to_ingredient_ingredient_id
-        FOREIGN KEY (ingredient_id)
-            REFERENCES ingredient (id);
+ALTER TABLE cocktails_to_ingredients
+    ADD FOREIGN KEY (ingredient_id)
+        REFERENCES ingredients (id);
 
-ALTER TABLE cocktail_to_ingredient
-    ADD CONSTRAINT fk_cocktail_to_ingredient_cocktail_id
-        FOREIGN KEY (cocktail_id)
-            REFERENCES cocktail (id);
+ALTER TABLE cocktails_to_ingredients
+    ADD FOREIGN KEY (cocktail_id)
+        REFERENCES cocktails (id);

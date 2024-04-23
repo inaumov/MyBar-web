@@ -13,7 +13,7 @@ class ActuatorApiTest extends ApiTest {
     @Test
     void testActuatorUpAndRunning() {
         givenAuthenticated(TEST_USERNAME, USER_PASS)
-                .get("http://localhost:8089/api/bar/actuator")
+                .get("http://localhost:8080/api/bar/actuator")
                 .then()
                 .assertThat()
                 .statusCode(200)

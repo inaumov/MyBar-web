@@ -2,7 +2,6 @@ package mybar.service.bar;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import mybar.api.bar.ICocktail;
 import mybar.api.bar.ICocktailIngredient;
@@ -15,10 +14,10 @@ import mybar.exception.CocktailNotFoundException;
 import mybar.exception.UniqueCocktailNameException;
 import mybar.exception.UnknownIngredientsException;
 import mybar.exception.UnknownMenuException;
-import mybar.repository.bar.CocktailDao;
-import mybar.repository.bar.IngredientDao;
-import mybar.repository.bar.MenuDao;
-import mybar.repository.rates.RatesDao;
+import mybar.repository.bar.CocktailsRepository;
+import mybar.repository.bar.IngredientRepository;
+import mybar.repository.bar.MenuRepository;
+import mybar.repository.rates.RatesRepository;
 import mybar.utils.Preconditions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -27,7 +26,7 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.util.function.SupplierUtils;
 
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -39,20 +38,19 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 @Service
 @Transactional
 @Slf4j
 public class CocktailsService {
 
-    private final MenuDao menuDao;
+    private final MenuRepository menuRepository;
 
-    private final CocktailDao cocktailDao;
+    private final CocktailsRepository cocktailsRepository;
 
-    private final IngredientDao ingredientDao;
+    private final IngredientRepository ingredientRepository;
 
-    private final RatesDao ratesDao;
+    private final RatesRepository ratesRepository;
 
     private Supplier<List<IMenu>> allMenusCached;
 
@@ -62,11 +60,11 @@ public class CocktailsService {
             .build();
 
     @Autowired
-    public CocktailsService(MenuDao menuDao, CocktailDao cocktailDao, IngredientDao ingredientDao, RatesDao ratesDao) {
-        this.menuDao = menuDao;
-        this.cocktailDao = cocktailDao;
-        this.ingredientDao = ingredientDao;
-        this.ratesDao = ratesDao;
+    public CocktailsService(MenuRepository menuRepository, CocktailsRepository cocktailsRepository, IngredientRepository ingredientRepository, RatesRepository ratesRepository) {
+        this.menuRepository = menuRepository;
+        this.cocktailsRepository = cocktailsRepository;
+        this.ingredientRepository = ingredientRepository;
+        this.ratesRepository = ratesRepository;
     }
 
     @PostConstruct
@@ -83,7 +81,7 @@ public class CocktailsService {
     }
 
     private List<IMenu> loadAllMenus() {
-        List<Menu> all = menuDao.findAll();
+        List<Menu> all = menuRepository.findAll();
         return all
                 .stream()
                 .map(Menu::toDto)
@@ -94,7 +92,7 @@ public class CocktailsService {
 
     private void ensureAllCocktailsLoaded() {
         if (cocktailsCache.estimatedSize() == 0) {
-            List<Menu> all = menuDao.findAll();
+            List<Menu> all = menuRepository.findAll();
             for (final Menu menu : all) {
                 final String menuName = menu.getName();
                 cocktailsCache.put(menuName, cocktailsToDtoList(menu, menuName));
@@ -109,7 +107,6 @@ public class CocktailsService {
                 .collect(Collectors.toList());
     }
 
-    @SneakyThrows
     private IMenu findMenuById(final int menuId) {
         return allMenusCached.get()
                 .stream()
@@ -134,7 +131,7 @@ public class CocktailsService {
             return cocktailsCache.asMap().get(menuName);
         }
         IMenu menu = findMenuByName(menuName);
-        List<ICocktail> cocktailDtoList = cocktailsToDtoList(menuDao.getOne(menu.getId()), menuName);
+        List<ICocktail> cocktailDtoList = cocktailsToDtoList(menuRepository.getOne(menu.getId()), menuName);
         cocktailsCache.put(menuName, cocktailDtoList);
         return cocktailDtoList;
     }
@@ -169,7 +166,7 @@ public class CocktailsService {
 
         Cocktail cocktailEntity = EntityFactory.from(cocktail, menu.getId());
         try {
-            Cocktail result = cocktailDao.save(cocktailEntity);
+            Cocktail result = cocktailsRepository.save(cocktailEntity);
             return result.toDto(menuName);
         } finally {
             cocktailsCache.invalidateAll();
@@ -195,7 +192,7 @@ public class CocktailsService {
     }
 
     private List<Integer> getExistedIngredientIds(List<Integer> asIds) {
-        List<Ingredient> ingredients = ingredientDao.findIn(asIds);
+        List<Ingredient> ingredients = ingredientRepository.findIn(asIds);
         return ingredients
                 .stream()
                 .map(Ingredient::getId)
@@ -203,7 +200,7 @@ public class CocktailsService {
     }
 
     private void checkCocktailExists(String name) throws UniqueCocktailNameException {
-        if (cocktailDao.existsByName(name)) {
+        if (cocktailsRepository.existsByName(name)) {
             throw new UniqueCocktailNameException(name);
         }
     }
@@ -212,9 +209,9 @@ public class CocktailsService {
         boolean hasRef = isCocktailInHistory(cocktail);
         if (hasRef) {
             Cocktail entity = EntityFactory.from(cocktail, -1); // TODO: 1/12/2018
-            cocktailDao.save(entity);
+            cocktailsRepository.save(entity);
         } else {
-            cocktailDao.deleteById(cocktail.getId());
+            cocktailsRepository.deleteById(cocktail.getId());
         }
     }
 
@@ -229,19 +226,19 @@ public class CocktailsService {
 
     public ICocktail findCocktailById(String id) throws CocktailNotFoundException {
         Preconditions.checkArgument(StringUtils.hasText(id), "Cocktail id is required.");
-        Optional<Cocktail> cocktail = cocktailDao.findById(id);
+        Optional<Cocktail> cocktail = cocktailsRepository.findById(id);
         return cocktail
                 .map(c -> c.toDto(findMenuById(c.getMenuId()).getName()))
                 .orElseThrow(() -> new CocktailNotFoundException(id));
     }
 
     public boolean isCocktailInHistory(ICocktail cocktail) {
-        return ratesDao.checkRateExistsForCocktail(cocktail.getId());
+        return ratesRepository.checkRateExistsForCocktail(cocktail.getId());
     }
 
     public void deleteCocktailById(String id) throws CocktailNotFoundException {
         Preconditions.checkArgument(StringUtils.hasText(id), "Cocktail id is required.");
-        cocktailDao.deleteById(id);
+        cocktailsRepository.deleteById(id);
         if (cocktailsCache.estimatedSize() == 0) {
             return;
         }

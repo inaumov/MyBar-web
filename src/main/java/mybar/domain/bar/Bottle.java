@@ -5,13 +5,13 @@ import lombok.Setter;
 import mybar.domain.bar.ingredient.Beverage;
 import org.hibernate.annotations.GenericGenerator;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.math.BigDecimal;
 
 @Getter
 @Setter
 @Entity
-@Table(name = "bottle")
+@Table(name = "bottles")
 @GenericGenerator(name = "bottle_id", strategy = "mybar.domain.EntityIdGenerator")
 public class Bottle {
 

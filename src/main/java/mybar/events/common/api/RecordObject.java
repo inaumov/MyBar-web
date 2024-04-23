@@ -6,7 +6,8 @@ import lombok.extern.jackson.Jacksonized;
 
 @Jacksonized
 @AllArgsConstructor(staticName = "of")
-@Data
+@Builder
+@Getter
 @NoArgsConstructor
 @ToString
 public class RecordObject<T> {

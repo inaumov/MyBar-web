@@ -11,43 +11,31 @@ import mybar.exception.UnknownMenuException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.text.MessageFormat;
 import java.util.Locale;
 
 @Slf4j
-@ControllerAdvice(basePackages = "mybar.web.rest.bar")
-public class RestExceptionProcessor {
+@RestControllerAdvice(basePackages = "mybar.web.rest.bar")
+@Order(Ordered.HIGHEST_PRECEDENCE)
+public class BarRestExceptionProcessor {
 
     private final MessageSource messageSource;
 
     @Autowired
-    public RestExceptionProcessor(MessageSource messageSource) {
+    public BarRestExceptionProcessor(MessageSource messageSource) {
         this.messageSource = messageSource;
     }
 
-//    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-//    @ExceptionHandler(Throwable.class)
-//    @ResponseBody
-//    public ErrorInfo handleThrowable(HttpServletRequest req, final Throwable ex) {
-//        log.error("Unexpected error", ex);
-//
-//        Locale locale = LocaleContextHolder.getLocale();
-//        String errorMessage = messageSource.getMessage("internal.server.error", null, locale);
-//
-//        String errorURL = req.getRequestURL().toString();
-//        return new ErrorInfo(errorURL, errorMessage);
-//    }
-
     @ExceptionHandler(BottleNotFoundException.class)
     @ResponseStatus(value = HttpStatus.NOT_FOUND)
-    @ResponseBody
     public ErrorInfo bottleNotFound(HttpServletRequest req, BottleNotFoundException ex) {
         log.warn("Bottle not found thrown:", ex);
 
@@ -62,7 +50,6 @@ public class RestExceptionProcessor {
 
     @ExceptionHandler(CocktailNotFoundException.class)
     @ResponseStatus(value = HttpStatus.NOT_FOUND)
-    @ResponseBody
     public ErrorInfo cocktailNotFound(HttpServletRequest req, CocktailNotFoundException ex) {
         log.warn("Cocktail not found thrown:", ex);
 
@@ -77,7 +64,6 @@ public class RestExceptionProcessor {
 
     @ExceptionHandler(UniqueCocktailNameException.class)
     @ResponseStatus(value = HttpStatus.BAD_REQUEST)
-    @ResponseBody
     public ErrorInfo cocktailUniqueName(HttpServletRequest req, UniqueCocktailNameException ex) {
         log.warn("Unique cocktail name thrown:", ex);
 
@@ -91,7 +77,6 @@ public class RestExceptionProcessor {
 
     @ExceptionHandler(UnknownMenuException.class)
     @ResponseStatus(value = HttpStatus.BAD_REQUEST)
-    @ResponseBody
     public ErrorInfo unknownMenuName(HttpServletRequest req, UnknownMenuException ex) {
         log.warn("Unknown menu name thrown:", ex);
 
@@ -105,7 +90,6 @@ public class RestExceptionProcessor {
 
     @ExceptionHandler(UnknownBeverageException.class)
     @ResponseStatus(value = HttpStatus.BAD_REQUEST)
-    @ResponseBody
     public ErrorInfo unknownBeverage(HttpServletRequest req, UnknownBeverageException ex) {
         log.warn("Unknown beverage thrown:", ex);
 
@@ -119,7 +103,6 @@ public class RestExceptionProcessor {
 
     @ExceptionHandler(UnknownIngredientsException.class)
     @ResponseStatus(value = HttpStatus.BAD_REQUEST)
-    @ResponseBody
     public ErrorInfo unknownIngredients(HttpServletRequest req, UnknownIngredientsException ex) {
         log.warn("Unknown ingredient thrown:", ex);
 
@@ -129,16 +112,6 @@ public class RestExceptionProcessor {
         String errorURL = req.getRequestURL().toString();
 
         return new ErrorInfo(errorURL, errorMessage);
-    }
-
-    @ExceptionHandler(IllegalArgumentException.class)
-    @ResponseStatus(value = HttpStatus.BAD_REQUEST)
-    @ResponseBody
-    public ErrorInfo requiredFields(HttpServletRequest req, IllegalArgumentException ex) {
-        log.warn("Invalid property value:", ex);
-
-        String errorURL = req.getRequestURL().toString();
-        return new ErrorInfo(errorURL, ex.getMessage());
     }
 
 }

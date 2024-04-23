@@ -13,15 +13,15 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 @DatabaseSetup("classpath:datasets/usersDataSet.xml")
-@ContextConfiguration(classes = RoleDao.class)
-public class RoleDaoTest extends UserBaseDaoTest {
+@ContextConfiguration(classes = RoleRepository.class)
+public class RoleRepositoryTest extends UserBaseRepositoryTest {
 
     @Autowired
-    private RoleDao roleDAO;
+    private RoleRepository roleRepository;
 
     @Test
     public void testSelectAllRoles() {
-        int size = roleDAO.findAll().size();
+        int size = roleRepository.findAll().size();
         assertEquals(ROLES_CNT, size);
     }
 
@@ -29,7 +29,7 @@ public class RoleDaoTest extends UserBaseDaoTest {
     public void testGetRole() {
         RoleName[] roleNames = RoleName.values();
         for (RoleName roleName : roleNames) {
-            Role role = roleDAO.getOne(roleName.name());
+            Role role = roleRepository.getReferenceById(roleName.name());
             assertNotNull(role);
             assertEquals(roleName.name(), role.getRoleName());
         }
@@ -37,7 +37,7 @@ public class RoleDaoTest extends UserBaseDaoTest {
 
     @Test
     public void findByRoleNameIn() {
-        List<Role> roles = roleDAO.findByRoleNameIn(Collections.singletonList(RoleName.ROLE_ADMIN.name()));
+        List<Role> roles = roleRepository.findByRoleNameIn(Collections.singletonList(RoleName.ROLE_ADMIN.name()));
         assertEquals(1, roles.size());
     }
 }

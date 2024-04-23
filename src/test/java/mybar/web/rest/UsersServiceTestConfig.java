@@ -1,8 +1,5 @@
 package mybar.web.rest;
 
-import mybar.api.users.IUser;
-import mybar.service.users.UserService;
-import org.mockito.Mockito;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
@@ -13,12 +10,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 
 import java.util.Arrays;
-import java.util.Collections;
-
-import static org.mockito.Mockito.when;
 
 @TestConfiguration
-public class TestConfig {
+public class UsersServiceTestConfig {
 
     private static UserDetails buildActive(User.UserBuilder userBuilder) {
         return userBuilder
@@ -27,19 +21,6 @@ public class TestConfig {
                 .disabled(false)
                 .credentialsExpired(false)
                 .build();
-    }
-
-    @Bean
-    public UserService userService() {
-        IUser userMock = Mockito.mock(IUser.class);
-        when(userMock.isActive()).thenReturn(true);
-        when(userMock.getUsername()).thenReturn("test");
-        when(userMock.getPassword()).thenReturn("user");
-        when(userMock.getRoles()).thenReturn(Collections.singletonList("ROLE_ANY"));
-
-        UserService userServiceMock = Mockito.mock(UserService.class);
-        Mockito.when(userServiceMock.findByUsername(Mockito.anyString())).thenReturn(userMock);
-        return userServiceMock;
     }
 
     @Bean

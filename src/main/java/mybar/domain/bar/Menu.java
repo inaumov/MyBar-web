@@ -5,7 +5,7 @@ import lombok.Setter;
 import mybar.api.bar.IMenu;
 import mybar.dto.DtoFactory;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.Collection;
 

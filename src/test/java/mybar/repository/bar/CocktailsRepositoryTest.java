@@ -2,6 +2,7 @@ package mybar.repository.bar;
 
 import com.github.springtestdbunit.annotation.DatabaseSetup;
 import com.github.springtestdbunit.annotation.ExpectedDatabase;
+import com.github.springtestdbunit.annotation.ExpectedDatabases;
 import com.github.springtestdbunit.assertion.DatabaseAssertionMode;
 import mybar.api.bar.Measurement;
 import mybar.domain.bar.Cocktail;
@@ -11,12 +12,12 @@ import mybar.domain.bar.ingredient.Additive;
 import mybar.domain.bar.ingredient.Beverage;
 import mybar.domain.bar.ingredient.Drink;
 import mybar.domain.bar.ingredient.Ingredient;
-import mybar.repository.BaseDaoTest;
+import mybar.repository.DbUnitBaseTest;
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.text.MessageFormat;
 import java.util.Collection;
@@ -27,51 +28,49 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Deep Tests of Cocktail DAO.
- */
 @DatabaseSetup("classpath:datasets/dataset.xml")
-@ContextConfiguration(classes = {CocktailDao.class, MenuDao.class, IngredientDao.class})
-public class CocktailDaoTest extends BaseDaoTest {
+@ContextConfiguration(classes = {CocktailsRepository.class, MenuRepository.class, IngredientRepository.class})
+public class CocktailsRepositoryTest extends DbUnitBaseTest {
 
     private static final String COCKTAIL_WITH_INGREDIENTS_ID = "cocktail-000001";
     private static final String COCKTAIL_WITH_NO_INGREDIENTS_ID = "cocktail-000009";
 
     @Autowired
-    private MenuDao menuDao;
+    private MenuRepository menuRepository;
     @Autowired
-    private CocktailDao cocktailDao;
+    private CocktailsRepository cocktailsRepository;
     @Autowired
-    private IngredientDao ingredientDao;
+    private IngredientRepository ingredientRepository;
 
     @Test
-    @ExpectedDatabase(value = "classpath:datasets/dataset.xml", assertionMode = DatabaseAssertionMode.NON_STRICT_UNORDERED)
+    @Order(Integer.MIN_VALUE)
     public void testPreconditions() {
-        // do nothing, just load and check dataSet and context loads
-        assertThat(menuDao).isNotNull();
-        assertThat(cocktailDao).isNotNull();
-        assertThat(ingredientDao).isNotNull();
+        // do nothing, and check context loads
+        assertThat(menuRepository).isNotNull();
+        assertThat(cocktailsRepository).isNotNull();
+        assertThat(ingredientRepository).isNotNull();
     }
 
-    @ExpectedDatabase(value = "classpath:datasets/expected/cocktails-create-all-ingredients.xml",
-            assertionMode = DatabaseAssertionMode.NON_STRICT_UNORDERED,
-            columnFilters = {
-                    EntityIdExclusionFilter.class
-            },
-            table = "COCKTAIL"
-    )
-    @ExpectedDatabase(value = "classpath:datasets/expected/cocktails-create-all-ingredients.xml",
-            assertionMode = DatabaseAssertionMode.NON_STRICT_UNORDERED,
-            columnFilters = {
-                    EntityIdExclusionFilter.class
-            },
-            table = "COCKTAIL_TO_INGREDIENT"
-    )
-    @ExpectedDatabase(value = "classpath:datasets/expected/ingredients.xml",
-            table = "INGREDIENT"
-    )
+    @ExpectedDatabases({
+            @ExpectedDatabase(value = "classpath:datasets/expected/cocktails-create-all-ingredients.xml",
+                    assertionMode = DatabaseAssertionMode.NON_STRICT_UNORDERED,
+                    columnFilters = {
+                            EntityIdExclusionFilter.class
+                    },
+                    table = "COCKTAILS"
+            ),
+            @ExpectedDatabase(value = "classpath:datasets/expected/cocktails-create-all-ingredients.xml",
+                    assertionMode = DatabaseAssertionMode.NON_STRICT_UNORDERED,
+                    columnFilters = {
+                            EntityIdExclusionFilter.class
+                    },
+                    table = "COCKTAILS_TO_INGREDIENTS"
+            ),
+            @ExpectedDatabase(value = "classpath:datasets/expected/ingredients.xml",
+                    table = "INGREDIENTS"
+            )
+    })
     @Test
-    @Transactional
     public void testCreateCocktail_WithAllIngredients() {
 
         Cocktail cocktail = new Cocktail();
@@ -80,7 +79,7 @@ public class CocktailDaoTest extends BaseDaoTest {
         cocktail.setDescription("some description");
         cocktail.setMenuId(2);
 
-        List<Ingredient> all = ingredientDao.findAll();
+        List<Ingredient> all = ingredientRepository.findAll();
         Assertions.assertThat(all)
                 .withFailMessage("Number of ingredients should be 18.")
                 .hasSize(18);
@@ -93,34 +92,35 @@ public class CocktailDaoTest extends BaseDaoTest {
             cocktailToIngredient.setMeasurement(Measurement.ML);
             cocktail.addCocktailToIngredient(cocktailToIngredient);
         }
-        Cocktail created = cocktailDao.save(cocktail);
+        Cocktail created = cocktailsRepository.save(cocktail);
         commit();
 
         // refresh
-        created = cocktailDao.getOne(created.getId());
+        created = cocktailsRepository.getReferenceById(created.getId());
         assertNotNull(created);
         assertTrue(created.getId().contains("cocktail-"));
         assertEquals(all.size(), created.getCocktailToIngredientList().size());
     }
 
-    @ExpectedDatabase(value = "classpath:datasets/expected/cocktails-remove.xml",
-            assertionMode = DatabaseAssertionMode.NON_STRICT_UNORDERED,
-            table = "COCKTAIL"
-    )
-    @ExpectedDatabase(value = "classpath:datasets/expected/cocktails-remove.xml",
-            assertionMode = DatabaseAssertionMode.NON_STRICT_UNORDERED,
-            table = "COCKTAIL_TO_INGREDIENT"
-    )
-    @ExpectedDatabase(value = "classpath:datasets/expected/ingredients.xml",
-            table = "INGREDIENT"
-    )
+    @ExpectedDatabases({
+            @ExpectedDatabase(value = "classpath:datasets/expected/cocktails-remove.xml",
+                    assertionMode = DatabaseAssertionMode.NON_STRICT_UNORDERED,
+                    table = "COCKTAILS"
+            ),
+            @ExpectedDatabase(value = "classpath:datasets/expected/cocktails-remove.xml",
+                    assertionMode = DatabaseAssertionMode.NON_STRICT_UNORDERED,
+                    table = "COCKTAILS_TO_INGREDIENTS"
+            ),
+            @ExpectedDatabase(value = "classpath:datasets/expected/ingredients.xml",
+                    table = "INGREDIENTS"
+            )
+    })
     @Test
-    @Transactional
     public void testRemoveCocktailFromMenuWhenNoLikes() {
-        cocktailDao.deleteById("cocktail-000007");
+        cocktailsRepository.deleteById("cocktail-000007");
         commit();
 
-        List<Menu> menuList = menuDao.findAll();
+        List<Menu> menuList = menuRepository.findAll();
         Iterator<Menu> it = menuList.iterator();
 
         // test first menu
@@ -141,19 +141,20 @@ public class CocktailDaoTest extends BaseDaoTest {
         // TODO not for the first release
     }
 
-    @ExpectedDatabase(value = "classpath:datasets/expected/cocktails-update-add-ingredients.xml",
-            assertionMode = DatabaseAssertionMode.NON_STRICT_UNORDERED,
-            table = "COCKTAIL"
-    )
-    @ExpectedDatabase(value = "classpath:datasets/expected/cocktails-update-add-ingredients.xml",
-            assertionMode = DatabaseAssertionMode.NON_STRICT_UNORDERED,
-            table = "COCKTAIL_TO_INGREDIENT"
-    )
-    @ExpectedDatabase(value = "classpath:datasets/expected/ingredients.xml",
-            table = "INGREDIENT"
-    )
+    @ExpectedDatabases({
+            @ExpectedDatabase(value = "classpath:datasets/expected/cocktails-update-add-ingredients.xml",
+                    assertionMode = DatabaseAssertionMode.NON_STRICT_UNORDERED,
+                    table = "COCKTAILS"
+            ),
+            @ExpectedDatabase(value = "classpath:datasets/expected/cocktails-update-add-ingredients.xml",
+                    assertionMode = DatabaseAssertionMode.NON_STRICT_UNORDERED,
+                    table = "COCKTAILS_TO_INGREDIENTS"
+            ),
+            @ExpectedDatabase(value = "classpath:datasets/expected/ingredients.xml",
+                    table = "INGREDIENTS"
+            )
+    })
     @Test
-    @Transactional
     public void testUpdateCocktail_when_AddNewIngredients() {
         // Edit 'Mai Tai' cocktail and put it into 'smoothie' menu
         Cocktail cocktail = new Cocktail();
@@ -170,26 +171,27 @@ public class CocktailDaoTest extends BaseDaoTest {
         cocktail.addCocktailToIngredient(juice);
         cocktail.addCocktailToIngredient(grenadine);
 
-        cocktailDao.save(cocktail);
+        cocktailsRepository.save(cocktail);
         commit();
     }
 
-    @ExpectedDatabase(value = "classpath:datasets/expected/cocktails-update-change-ingredients.xml",
-            assertionMode = DatabaseAssertionMode.NON_STRICT_UNORDERED,
-            table = "COCKTAIL"
-    )
-    @ExpectedDatabase(value = "classpath:datasets/expected/cocktails-update-change-ingredients.xml",
-            assertionMode = DatabaseAssertionMode.NON_STRICT_UNORDERED,
-            table = "COCKTAIL_TO_INGREDIENT"
-    )
-    @ExpectedDatabase(value = "classpath:datasets/expected/ingredients.xml",
-            table = "INGREDIENT"
-    )
+    @ExpectedDatabases({
+            @ExpectedDatabase(value = "classpath:datasets/expected/cocktails-update-change-ingredients.xml",
+                    assertionMode = DatabaseAssertionMode.NON_STRICT_UNORDERED,
+                    table = "COCKTAILS"
+            ),
+            @ExpectedDatabase(value = "classpath:datasets/expected/cocktails-update-change-ingredients.xml",
+                    assertionMode = DatabaseAssertionMode.NON_STRICT_UNORDERED,
+                    table = "COCKTAILS_TO_INGREDIENTS"
+            ),
+            @ExpectedDatabase(value = "classpath:datasets/expected/ingredients.xml",
+                    table = "INGREDIENTS"
+            )
+    })
     @Test
-    @Transactional
     public void testUpdateCocktail_when_ChangeIngredients() {
         // Edit 'B52' cocktail and add more ingredients
-        Cocktail cocktail = cocktailDao.getOne(COCKTAIL_WITH_INGREDIENTS_ID);
+        Cocktail cocktail = cocktailsRepository.getReferenceById(COCKTAIL_WITH_INGREDIENTS_ID);
         assertNotNull(cocktail);
 
         Cocktail cocktailForUpdate = new Cocktail();
@@ -205,7 +207,7 @@ public class CocktailDaoTest extends BaseDaoTest {
         cocktailForUpdate.addCocktailToIngredient(juice);
         cocktailForUpdate.addCocktailToIngredient(grenadine);
 
-        cocktailDao.save(cocktailForUpdate);
+        cocktailsRepository.save(cocktailForUpdate);
         commit();
     }
 
@@ -233,7 +235,7 @@ public class CocktailDaoTest extends BaseDaoTest {
 
     @Test
     public void testGetIngredientsForCocktail() {
-        Cocktail longIsland = cocktailDao.getOne("cocktail-000005");
+        Cocktail longIsland = cocktailsRepository.getReferenceById("cocktail-000005");
         assertNotNull(longIsland);
 
         List<CocktailToIngredient> ingredients = longIsland.getCocktailToIngredientList();
@@ -270,12 +272,12 @@ public class CocktailDaoTest extends BaseDaoTest {
 
     @Test
     public void testFindCocktailByName_when_exists() {
-        assertTrue(cocktailDao.existsByName("Mai Tai"));
+        assertTrue(cocktailsRepository.existsByName("Mai Tai"));
     }
 
     @Test
     public void testFindCocktailByName_when_not_found() {
-        assertFalse(cocktailDao.existsByName("Blue Lagoon"));
+        assertFalse(cocktailsRepository.existsByName("Blue Lagoon"));
     }
 
 }

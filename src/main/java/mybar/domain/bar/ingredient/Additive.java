@@ -2,8 +2,8 @@ package mybar.domain.bar.ingredient;
 
 import mybar.api.bar.ingredient.IAdditive;
 
-import javax.persistence.DiscriminatorValue;
-import javax.persistence.Entity;
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
 
 @Entity
 @DiscriminatorValue(value = "Additive")

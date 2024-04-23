@@ -8,11 +8,9 @@ CREATE TABLE rates
 );
 
 ALTER TABLE rates
-    ADD CONSTRAINT fk_rates_username
-        FOREIGN KEY (username)
-            REFERENCES users (username);
+    ADD FOREIGN KEY (username)
+        REFERENCES users (username);
 
 ALTER TABLE rates
-    ADD CONSTRAINT fk_rates_cocktail_id
-        FOREIGN KEY (cocktail_id)
-            REFERENCES cocktail (id);
+    ADD FOREIGN KEY (cocktail_id)
+        REFERENCES cocktails (id);

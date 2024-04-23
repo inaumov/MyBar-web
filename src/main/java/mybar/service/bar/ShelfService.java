@@ -11,16 +11,16 @@ import mybar.dto.DtoFactory;
 import mybar.dto.bar.BottleDto;
 import mybar.exception.BottleNotFoundException;
 import mybar.exception.UnknownBeverageException;
-import mybar.repository.bar.BottleDao;
-import mybar.repository.bar.IngredientDao;
+import mybar.repository.bar.BottleRepository;
+import mybar.repository.bar.IngredientRepository;
 import mybar.utils.Preconditions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import javax.persistence.EntityExistsException;
-import javax.persistence.EntityNotFoundException;
+import jakarta.persistence.EntityExistsException;
+import jakarta.persistence.EntityNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -34,9 +34,9 @@ import static mybar.dto.DtoFactory.toDto;
 @Transactional
 public class ShelfService {
 
-    private final BottleDao bottleDao;
+    private final BottleRepository bottleRepository;
 
-    private final IngredientDao ingredientDao;
+    private final IngredientRepository ingredientRepository;
 
     private final Cache<String, IBottle> bottlesCache = Caffeine.newBuilder()
             .expireAfterAccess(30, TimeUnit.MINUTES)
@@ -44,9 +44,9 @@ public class ShelfService {
             .build();
 
     @Autowired
-    public ShelfService(BottleDao bottleDao, IngredientDao ingredientDao) {
-        this.bottleDao = bottleDao;
-        this.ingredientDao = ingredientDao;
+    public ShelfService(BottleRepository bottleRepository, IngredientRepository ingredientRepository) {
+        this.bottleRepository = bottleRepository;
+        this.ingredientRepository = ingredientRepository;
     }
 
     public IBottle findById(final String id) throws BottleNotFoundException {
@@ -61,7 +61,7 @@ public class ShelfService {
     }
 
     private BottleDto loadById(String id) {
-        Bottle read = bottleDao.getOne(id);
+        Bottle read = bottleRepository.getOne(id);
         if (read != null) {
             return toDto(read);
         }
@@ -77,7 +77,7 @@ public class ShelfService {
         newEntity.setBeverage(getBeverageById(bottle.getBeverage()));
 
         try {
-            Bottle entity = bottleDao.save(newEntity);
+            Bottle entity = bottleRepository.save(newEntity);
             BottleDto dto = toDto(entity);
             clearCache();
             return dto;
@@ -94,7 +94,7 @@ public class ShelfService {
 
         Bottle newEntity = EntityFactory.from(bottle);
         newEntity.setBeverage(getBeverageById(bottle.getBeverage()));
-        Bottle entity = bottleDao.save(newEntity);
+        Bottle entity = bottleRepository.save(newEntity);
         clearCache();
         return toDto(entity);
     }
@@ -106,13 +106,13 @@ public class ShelfService {
     }
 
     private Beverage getBeverageById(IBeverage beverage) {
-        return ingredientDao.findBeverageById(beverage.getId());
+        return ingredientRepository.findBeverageById(beverage.getId());
     }
 
     public void deleteBottleById(final String id) throws BottleNotFoundException {
         Preconditions.checkArgument(StringUtils.hasText(id), "Bottle id is required.");
         try {
-            bottleDao.deleteById(id);
+            bottleRepository.deleteById(id);
         } catch (EntityNotFoundException e) {
             return; // TODO: 1/12/2018 handle properly
         }
@@ -131,14 +131,14 @@ public class ShelfService {
     }
 
     private void loadAllBottles() {
-        Map<String, BottleDto> allBottles = bottleDao.findAll()
+        Map<String, BottleDto> allBottles = bottleRepository.findAll()
                 .stream()
                 .collect(Collectors.toMap(Bottle::getId, DtoFactory::toDto));
         bottlesCache.putAll(allBottles);
     }
 
     public void deleteAllBottles() {
-        bottleDao.deleteAll();
+        bottleRepository.deleteAll();
         clearCache();
     }
 

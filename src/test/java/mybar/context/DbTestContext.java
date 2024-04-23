@@ -3,6 +3,8 @@ package mybar.context;
 import org.awaitility.Awaitility;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.ApplicationContextInitializer;
@@ -16,6 +18,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.jdbc.JdbcTestUtils;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -31,6 +34,9 @@ import java.util.stream.Stream;
 @ContextConfiguration(initializers = {
         DbTestContext.Initializer.class
 })
+@DataJpaTest
+@TestPropertySource("classpath:application-test.yaml")
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 public abstract class DbTestContext {
 
     @Autowired
@@ -49,9 +55,8 @@ public abstract class DbTestContext {
 
     static class Initializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
 
-        public static final PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:14.2-alpine3.15")
+        public static final PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15.6-alpine")
                 .withReuse(true)
-                .withDatabaseName("my_bar")
                 .withUsername("postgres")
                 .withPassword("postgres");
 
@@ -86,7 +91,7 @@ public abstract class DbTestContext {
     @EnableTransactionManagement
     @EnableJpaRepositories(basePackages = "mybar.repository")
     @EntityScan(basePackages = "mybar.domain")
-    public static class Config {
+    static class Config {
 
         @Bean
         @Primary

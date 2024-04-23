@@ -8,8 +8,8 @@ import mybar.dto.users.UserDto;
 import mybar.exception.users.EmailDuplicatedException;
 import mybar.exception.users.UnknownUserException;
 import mybar.exception.users.UserExistsException;
-import mybar.repository.users.RoleDao;
-import mybar.repository.users.UserDao;
+import mybar.repository.users.RoleRepository;
+import mybar.repository.users.UserRepository;
 import mybar.utils.Preconditions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -25,14 +25,14 @@ import java.util.stream.Collectors;
 @Transactional
 public class UserService {
 
-    private final UserDao userDao;
+    private final UserRepository userRepository;
 
-    private final RoleDao roleDao;
+    private final RoleRepository roleRepository;
 
     @Autowired
-    public UserService(UserDao userDao, RoleDao roleDao) {
-        this.userDao = userDao;
-        this.roleDao = roleDao;
+    public UserService(UserRepository userRepository, RoleRepository roleRepository) {
+        this.userRepository = userRepository;
+        this.roleRepository = roleRepository;
     }
 
     public IUser createUser(IUser user) throws UserExistsException, EmailDuplicatedException {
@@ -44,17 +44,17 @@ public class UserService {
         User userEntity = toEntity(user);
         userEntity.setActive(true);
         if (CollectionUtils.isEmpty(user.getRoles())) {
-            Role roleUser = roleDao.getOne(RoleName.ROLE_USER.name());
+            Role roleUser = roleRepository.getOne(RoleName.ROLE_USER.name());
             userEntity.addRole(roleUser);
         } else {
-            List<Role> assignedRoles = roleDao.findByRoleNameIn(user.getRoles());
+            List<Role> assignedRoles = roleRepository.findByRoleNameIn(user.getRoles());
             assignedRoles.forEach(userEntity::addRole);
         }
-        return toUserDto(userDao.save(userEntity));
+        return toUserDto(userRepository.save(userEntity));
     }
 
     public boolean isEmailDuplicated(String email) {
-        User userEntity = userDao.findByEmail(email);
+        User userEntity = userRepository.findByEmail(email);
         return userEntity != null;
     }
 
@@ -65,7 +65,7 @@ public class UserService {
     }
 
     private void checkUsernameDuplicated(String username) {
-        boolean exists = userDao.existsById(username);
+        boolean exists = userRepository.existsById(username);
         if (exists) {
             throw new UserExistsException(username);
         }
@@ -76,7 +76,7 @@ public class UserService {
     public IUser editUserInfo(IUser user) {
         Preconditions.checkArgument(StringUtils.hasText(user.getUsername()), "Username is required.");
         Preconditions.checkArgument(StringUtils.hasText(user.getEmail()), "Email is required.");
-        User userEntityByEmail = userDao.findByEmail(user.getEmail());
+        User userEntityByEmail = userRepository.findByEmail(user.getEmail());
         if (Objects.equals(userEntityByEmail.getEmail(), user.getEmail())) {
             throw new UserExistsException("Email already belongs to another user");
         }
@@ -86,20 +86,20 @@ public class UserService {
         entity.setName(user.getName());
         entity.setSurname(user.getSurname());
         if (CollectionUtils.isEmpty(user.getRoles())) {
-            Role roleUser = roleDao.getOne(RoleName.ROLE_USER.name());
+            Role roleUser = roleRepository.getOne(RoleName.ROLE_USER.name());
             entity.addRole(roleUser);
         } else {
-            List<Role> roles = roleDao.findByRoleNameIn(user.getRoles());
+            List<Role> roles = roleRepository.findByRoleNameIn(user.getRoles());
             entity.setRoles(roles);
         }
 
-        return toUserDto(userDao.save(entity));
+        return toUserDto(userRepository.save(entity));
     }
 
     public IUser findByUsername(String username) throws UnknownUserException {
         Preconditions.checkArgument(StringUtils.hasText(username), "Username is required.");
 
-        return userDao.findById(username)
+        return userRepository.findById(username)
                 .map(this::toUserDto)
                 .orElseThrow(() -> new UnknownUserException(username));
     }
@@ -123,10 +123,10 @@ public class UserService {
     public void activateUser(String username) {
         Preconditions.checkArgument(StringUtils.hasText(username), "Username is required.");
 
-        User userEntity = userDao.getOne(username);
+        User userEntity = userRepository.getOne(username);
         if (userEntity != null) {
             userEntity.setActive(true);
-            userDao.save(userEntity);
+            userRepository.save(userEntity);
         }
         throw new UnknownUserException(username);
     }
@@ -134,23 +134,23 @@ public class UserService {
     public void deactivateUser(String username) throws UnknownUserException {
         Preconditions.checkArgument(StringUtils.hasText(username), "Username is required.");
 
-        User userEntity = userDao.getOne(username);
+        User userEntity = userRepository.getOne(username);
         if (userEntity != null) {
             userEntity.setActive(false);
-            userDao.save(userEntity);
+            userRepository.save(userEntity);
         }
         throw new UnknownUserException(username);
     }
 
     public void assignRole(IUser user, RoleName roleName) {
         User userEntity = toEntity(user);
-        Role role = roleDao.getOne(roleName.name());
+        Role role = roleRepository.getOne(roleName.name());
         userEntity.addRole(role);
-        userDao.save(userEntity);
+        userRepository.save(userEntity);
     }
 
     public List<IUser> getAllRegisteredUsers() {
-        Iterable<User> users = userDao.findAll();
+        Iterable<User> users = userRepository.findAll();
         return filterUsers(users)
                 .stream()
                 .map(this::toUserDto)
@@ -160,7 +160,7 @@ public class UserService {
     // util methods
 
     private Collection<User> filterUsers(Iterable<User> users) {
-        Role role = roleDao.getOne(RoleName.ROLE_USER.name());
+        Role role = roleRepository.getOne(RoleName.ROLE_USER.name());
         if (role != null) {
             Predicate<User> predicate = user -> user.getRoles().contains(role);
             return filter(users, predicate);
@@ -185,7 +185,7 @@ public class UserService {
         entity.setEmail(user.getEmail());
         entity.setName(user.getName());
         entity.setSurname(user.getSurname());
-        List<Role> roles = roleDao.findByRoleNameIn(user.getRoles());
+        List<Role> roles = roleRepository.findByRoleNameIn(user.getRoles());
         entity.setRoles(roles);
         entity.setActive(user.isActive());
         return entity;
@@ -195,7 +195,7 @@ public class UserService {
         Preconditions.checkArgument(StringUtils.hasText(user.getUsername()), "Username is required.");
         Preconditions.checkArgument(StringUtils.hasText(password), "Password must not be empty.");
 
-        final User one = userDao.getOne(user.getUsername());
+        final User one = userRepository.getOne(user.getUsername());
         one.setPassword(password);
     }
 

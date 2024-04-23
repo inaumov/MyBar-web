@@ -5,7 +5,7 @@ import lombok.Setter;
 import mybar.api.bar.ingredient.DrinkType;
 import mybar.api.bar.ingredient.IDrink;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 @Getter
 @Setter
